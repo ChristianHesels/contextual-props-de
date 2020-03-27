@@ -24,14 +24,17 @@ Options:
 import os, sys, codecs, time, datetime
 import fileinput
 import os.path
-from cStringIO import StringIO
+from io import StringIO
 from subprocess import call
 
 from docopt import docopt
 from propsde.applications.viz_tree import DepTreeVisualizer
 
 import propsde.applications.run as run
-
+import sys
+if sys.version_info[0] >= 3:
+    unicode = str
+    
 def main(arguments):
     
     outputType = 'html'
@@ -65,7 +68,7 @@ def main(arguments):
                     d = DepTreeVisualizer.from_conll_unicode(tree)
                     f.write(d.as_svg(compact=True,flat=True))
                 except:
-                    print 'error creating dep svg', file_name
+                    print('error creating dep svg', file_name)
                 f.close()
             #else:
             print (tree).encode('utf-8')
@@ -79,14 +82,14 @@ def main(arguments):
                     f.write(dot.create(format='svg'))
                     f.close()
                 except:
-                    print 'error creating props svg', file_name
+                    print('error creating props svg', file_name)
             #else:
-            print unicode(g).encode('utf-8')
+            print(unicode(g).encode('utf-8'))
         
         #print open ie like extractions
         if (arguments["--oie"]):
             for prop in g.getPropositions('pdf'):
-                print unicode(prop).encode('utf-8')
+                print(unicode(prop).encode('utf-8'))
             
         print 
         i += 1

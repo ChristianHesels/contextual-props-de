@@ -60,14 +60,14 @@ def tree_to_graph(tree):
 
 def collapse_graph(gr):
     # prepositions
-    prep_edges = find_edges(graph=gr, filterFunc = lambda (u,v): gr.edge_label((u,v))=="prep" and gr.neighbors(v)==1)
+    prep_edges = find_edges(graph=gr, filterFunc = lambda u_v: gr.edge_label((u,v))=="prep" and gr.neighbors(v)==1)
     for u,v in prep_edges:
         pobj = gr.neighbors(v)[0]
         gr.add_edge((u,pobj),"prep_"+v.text[0].word.lower())
         gr.del_node(v)
         
     # conjunctions
-    conj_edges = find_edges(graph=gr, filterFunc = lambda (u,v): gr.edge_label((u,v))=="conj" and len(u.neighbors().get("cc",[]))==1)
+    conj_edges = find_edges(graph=gr, filterFunc = lambda u_v: gr.edge_label((u,v))=="conj" and len(u.neighbors().get("cc",[]))==1)
     toDel = []
     for u,v in conj_edges:
         cc = u.neighbors()['cc'][0]

@@ -1,6 +1,10 @@
 from propsde.dependency_tree.definitions import subject_dependencies, ARG_LABEL,\
     object_dependencies, SOURCE_LABEL, domain_label, POSSESSED_LABEL,\
     POSSESSOR_LABEL
+
+import sys
+if sys.version_info[0] >= 3:
+    unicode = str
     
 class Proposition:
     def __init__(self,pred,args,outputType):
@@ -34,7 +38,7 @@ class Proposition:
         else:
             return 4
         
-    def __unicode__(self):
+    def __str__(self):
         PDF = (self.outputType == "pdf")
         HTML = (self.outputType == "html")
         if PDF:
@@ -45,11 +49,10 @@ class Proposition:
             color = lambda t,color: u'<font color="{0}">{1}</font>'.format(color,t)
             
         curProp = u'{0}:({1})'.format(bold(self.pred),
-                                      ", ".join([rel + ":" + bold(color(arg,"blue")) for rel,arg in sorted(self.args,key=lambda(rel,_):self.rel_order(rel))]))
-        return curProp
+                                      ", ".join([rel + ":" + bold(color(arg,"blue")) for rel,arg in sorted(self.args,key=lambda rel:self.rel_order(rel[0]))]))
+        return str(curProp)
         
-    def __str__(self):
-        return unicode(self).encode('utf-8')
+
 
 mapPossessive = {
     "dein": "du",

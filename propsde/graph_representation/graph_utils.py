@@ -2,6 +2,7 @@ from pygraph.algorithms.sorting import topological_sorting
 from pygraph.classes.digraph import digraph
 # import graph_representation.node
 import subprocess, math, re, nltk
+from functools import reduce
 from pygraph.algorithms.accessibility import accessibility
 from propsde.graph_representation.word import NO_INDEX, Word, strip_punctuations
 from pygraph.algorithms.traversal import traversal
@@ -11,7 +12,9 @@ import cgi
 import time
 # from graph_representation.node import Node
 from propsde.graph_representation import newNode
-
+import sys
+if sys.version_info[0] >= 3:
+    unicode = str
 
 def accessibility_wo_self(graph):
     ret = accessibility(graph)
@@ -187,7 +190,7 @@ def find_nodes(graph, filterFunc):
     @rtype list(Node)
     @param list of Node objects matching filter func.
     """
-    return filter(filterFunc, graph.nodes())
+    return list(filter(filterFunc, graph.nodes()))
 
 
 def find_edges(graph, filterFunc):
@@ -203,7 +206,7 @@ def find_edges(graph, filterFunc):
     @rtype list(edges)
     @param list of edges matching filter func. 
     """
-    return filter(filterFunc, graph.edges())
+    return list(filter(filterFunc, graph.edges()))
 
 
 
@@ -456,12 +459,15 @@ def merge_nodes(gr, node1, node2):
     # update lemma for merged predicates
     if new.isPredicate:
         if rel_type == 'PM':
+            print("PM")
             predicate_form = u''.join([w.word for w in node2.text]) + ' ' + u''.join([w.word for w in node1.text])
             new.features["Lemma"] = predicate_form
         elif rel_type == 'SVP':
+            print("SVP")
             predicate_form = u''.join([w.word for w in node2.text]) + node1.features.get("Lemma")
             new.features["Lemma"] = predicate_form
         elif rel_type == 'MO':
+            print("MO")
             predicate_form = u' '.join([w.word for w in node2.text]) + ' ' + node1.features.get("Lemma")
             new.features["Lemma"] = predicate_form
         if "cvc" in new.features:
@@ -486,7 +492,7 @@ def replace_head(gr, head, dependent):
                 if parent != dependent:
                     gr.add_edge((parent,dependent), parent_rel)
         # add features
-        dependent.features.update({k:x for k,x in head.features.iteritems() if k not in dependent.features})
+        dependent.features.update({k:x for k,x in head.features.items() if k not in dependent.features})
         gr.del_node(head)                
 
 def subgraph_to_string(graph,node,exclude=[]):

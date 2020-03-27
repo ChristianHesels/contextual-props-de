@@ -3,6 +3,11 @@ import cgi
 from copy import deepcopy, copy
 from propsde.dependency_tree.definitions import time_prep, definite_label,\
     adjectival_mod_dependencies
+import sys
+if sys.version_info[0] >= 3:
+    unicode = str
+
+
 
 COPULA = "SameAs"          # the textual value of a copula node
 PROP = "PROP"          # the textual value of a property node
@@ -136,7 +141,7 @@ class Node:
         return sorted(self.text,
                       key= lambda w:w.index)
     
-    def __unicode__(self):
+    def __str__(self):
         ret = '<TABLE BORDER="0" CELLSPACING="0"><TR><TD>'
         filtered_spans = []
         for feat,_ in PRINT_FEATURES:
@@ -170,10 +175,8 @@ class Node:
                 ret+="</TD></TR>"
             
         ret +="</TABLE>" 
-        return ret
+        return str(ret)
         
-    def __str__(self):
-        return unicode(self).encode('utf-8')
     
     
     def to_conll_like(self):
@@ -214,6 +217,8 @@ class Node:
     
     def __hash__(self):
         return self.__str__().__hash__()
+    
+    
     
     def makeTopNode(self):
         if self.features.get("top",False):
@@ -260,9 +265,9 @@ def join(node1,node2,gr):
     @rtype Node
     @return a node representing the union of both nodes
     """
-    
     # join all values
     isPredicate = (node1.isPredicate or node2.isPredicate)
+    
     text = list(set(node1.get_text(gr)).union(node2.get_text(gr)))
     text = sorted(text, key= lambda w:w.index)
     original_text = list(set(node1.original_text).union(node2.original_text))

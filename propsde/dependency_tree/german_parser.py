@@ -20,19 +20,19 @@ class ParserDE(object):
         self.model_path_lem = 'ext/mate-model/lemma-ger.model'
         self.model_path_parse = 'ext/mate-model/parser-ger.model'
         if not os.path.exists(self.model_path_lem) or not os.path.exists(self.model_path_lem):
-            print 'mate-tools model not found!'
+            print('mate-tools model not found!')
             exit()
         self.setup()
         
     # load models if using jpype 
     def setup(self):
         if self.isJPype:
-            print 'loading mate-tools'
+            print('loading mate-tools')
             startJVM(getDefaultJVMPath(), '-Xmx4g', '-Djava.class.path=ext/transition-1.30.jar')
             self.is2 = JPackage('is2')
             self.lem = self.is2.lemmatizer2.Lemmatizer(self.model_path_lem)
             self.parser = self.is2.transitionS2a.Parser(self.model_path_parse)
-            print 'mate-tools ready'
+            print('mate-tools ready')
         
     # shutdown JVM
     def shutdown(self):
@@ -65,6 +65,7 @@ class ParserDE(object):
             conll.append(s2.toString())
             
         output = codecs.open(self.tmp+'/parsed.conll09', 'w', encoding='utf-8')
+        print(output)
         for s in conll:
             output.write(s + '\n')
         output.close()
@@ -85,17 +86,17 @@ class ParserDE(object):
             input.write("\n")
         input.close()
 
-        print "running mate-tools"
+        print("running mate-tools")
 
         # lemmatizing
         cmd = 'java -cp ext/transition-1.30.jar is2.lemmatizer2.Lemmatizer -model '+self.model_path_lem+' -test '+self.tmp+'/input.conll09 -out '+self.tmp+'/lemmatized.conll09'
-        print "lemmatizing"
+        print("lemmatizing")
         res = os.popen(cmd)
         res.close()
 
         # parsing -> joint parsing and tagging
         cmd = 'java -Xmx4g -cp ext/transition-1.30.jar is2.transitionS2a.Parser -model '+self.model_path_parse+' -test '+self.tmp+'/lemmatized.conll09 -out '+self.tmp+'/parsed.conll09'
-        print "parsing + tagging"
+        print("parsing + tagging")
         res = os.popen(cmd)
         res.close()
         
@@ -123,8 +124,8 @@ class ParserDE(object):
             cmd = 'java -jar ext/org.jobimtext.collapsing.jar -i '+file06+' -o . -sf -l de -r ext/resources/german_modified.txt -f c -np -nt'
         else:
             cmd = 'java -jar ext/org.jobimtext.collapsing.jar -i '+file06+' -o ' + self.tmp + ' -sf -l de -r ext/resources/german_modified.txt -f c -np -nt'
-        print "collapsing"
-        print cmd
+        print("collapsing")
+        print(cmd)
         res = os.popen(cmd)
         res.close()
 

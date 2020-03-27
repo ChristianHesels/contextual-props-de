@@ -1,5 +1,5 @@
 from xml.etree import ElementTree as et
-import cStringIO as strio
+import io as strio
 from collections import defaultdict
 
 square_edges = True
@@ -360,5 +360,5 @@ if __name__ == '__main__':
 18     in     _     IN     IN     _     12     ADV     _     _
 19     1990     _     CD     CD     _     18     PMOD     _     _
 20     .     _     .     .     _     5     P     _     _ """)
-    print "<div>",d.as_svg(compact=True,flat=True),"</div>"
+    print("<div>",d.as_svg(compact=True,flat=True),"</div>")
   # print "<div>",d.as_svg(compact=False),"</div>"

@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from __builtin__ import dir
 from propsde.graph_representation.graphParsingException import GraphParsingException
 from nltk.tree import Tree
 from propsde.graph_representation.word import Word
@@ -11,6 +10,9 @@ from propsde.constituency_tree.definitions import *
 from propsde.constituency_tree.my_definitions import any_in
 import copy, os
 UNDERSCORE = "_"
+import sys
+if sys.version_info[0] >= 3:
+    unicode = str
 
 from propsde.utils.utils import encode_german_characters
 
@@ -746,7 +748,7 @@ class DepTree(object):
         if not relevant_children:
             return False,False
         if (len(relevant_children) !=1):
-            print self.get_original_sentence(root=False)
+            print(self.get_original_sentence(root=False))
         child = relevant_children[0]
         d = child._get_subtree_nodes(includeHead = True)
         return  {"Value":child.get_original_sentence(root=False),
@@ -866,9 +868,9 @@ class DepTree(object):
         pobjChildren = any_in([c.parent_relation for c in prepChild.children], ["pobj"])
         pcompChildren = any_in([c.parent_relation for c in prepChild.children], ["pcomp"])
         if (len(pobjChildren)>1) or (len(pcompChildren)>1):
-            print pobjChildren
-            print self.word
-            print GraphParsingException("misproper handling for more than one pobj child " +self.report())
+            print(pobjChildren)
+            print(self.word)
+            print(GraphParsingException("misproper handling for more than one pobj child " +self.report()))
         
         if pobjChildren:
             pobjChild = prepChild.children[pobjChildren[0]]
@@ -947,7 +949,7 @@ class DepTree(object):
     def _POSSESSIVE_PREDICATE_FEATURE_Possessed(self):
         childrenCopy = [x for x in self.children]
         if (self.possChild[0] >= len(self.children)):
-            print "stub" 
+            print("stub")
         self.children = [x for i,x in enumerate(self.children) if i!=self.possChild[0]]
         #self.children.remove(self.children[self.possChild[0]])
         d = self._get_subtree_nodes(includeHead = True)
