@@ -114,7 +114,7 @@ class GraphWrapper(digraph):
         @rtype  list(edge)
         @return the edges stored in this graph
         """
-        return [(self.nodesMap[u], self.nodesMap[v]) for u, v in digraph.edges(self)]
+        return [(self.nodesMap[u_v[0]], self.nodesMap[u_v[1]]) for u_v in digraph.edges(self)]
 
     def is_edge_exists(self, n1, n2):
         """
@@ -464,7 +464,7 @@ class GraphWrapper(digraph):
                     self.del_edge((u, v))
                     self.add_edge((rc_pronoun_head,u), rel_pronoun)
                     if not self.has_proper_noun(u):
-                        self.add_edge(u_v, "mod")
+                        self.add_edge((u, v), "mod")
                         rc_pronoun_head.makeTopNode()
     
     def has_proper_noun(self, node):
@@ -508,7 +508,7 @@ class GraphWrapper(digraph):
                     incidents = u.incidents()
                     if "CC" in incidents:
                         cc = incidents["CC"][0]
-                        self.del_edge(u_v)
+                        self.del_edge((u, v))
                         self.add_edge((cc,v),"tmp")
                         merge_nodes(self,cc,v)
                 except:
@@ -527,7 +527,6 @@ class GraphWrapper(digraph):
                 else:
                     w = Word(index = u.maxIndex()+1,word=conjType)
                 u.text.append(w)
-            print("Merge: ",u.uid, v.uid)
             merge_nodes(self, u, v)
             print("Done")
             return True
@@ -578,7 +577,7 @@ class GraphWrapper(digraph):
                 self.set_edge_label(edge, label)
                 
         # prep collapse 2 - additional collapsing
-        edges = find_edges(self, lambda u_v:(self.edge_label(u_v) in ["MNR","MO","OP"]) and (len(self.neighbors(u_v[1])) == 1) and u_v[0].pos() in ['APPR','APPRART'])
+        edges = find_edges(self, lambda u_v:(self.edge_label(u_v) in ["MNR","MO","OP"]) and (len(self.neighbors(u_v[1])) == 1) and u_v[1].pos() in ['APPR','APPRART'])
         if edges:
             for u, v in edges:
                 pobj = v.neighbors().itervalues().next()[0]
@@ -720,7 +719,7 @@ class GraphWrapper(digraph):
         
                                 
     def do_poss(self):
-        edges = find_edges(self, lambda u_v: (self.edge_label(u_v) == "NK" and u_v[0].pos() in ['PPOSAT']) or (self.edge_label(u_v) == "AG" and u_v[0].pos() in ['NE']))
+        edges = find_edges(self, lambda u_v: (self.edge_label(u_v) == "NK" and u_v[1].pos() in ['PPOSAT']) or (self.edge_label(u_v) == "AG" and u_v[1].pos() in ['NE']))
         for (possessed, possessor) in edges:
             self.types.add("Possessives")
             possessiveNode = getPossesive(self, possessor.minIndex())  # TODO: refine index
@@ -868,7 +867,7 @@ class GraphWrapper(digraph):
     
     def _do_conditionals(self):
         # find conditionals constructions
-        edges = find_edges(self, lambda u_v:(self.edge_label(u_v) == "CP") and u_v[0].pos() in ['KOUS','KOUI'] and (v.text[0].word.lower() in [u"falls",u"wenn",u"sofern",u"da",u"weil",u"obwohl",u"um",u"waehrend"]))
+        edges = find_edges(self, lambda u_v:(self.edge_label(u_v) == "CP") and u_v[1].pos() in ['KOUS','KOUI'] and (u_v[1].text[0].word.lower() in [u"falls",u"wenn",u"sofern",u"da",u"weil",u"obwohl",u"um",u"waehrend"]))
         for (markFather,markNode) in edges:
             neighbors = markFather.neighbors()
             incidents = markFather.incidents()
@@ -1126,7 +1125,7 @@ class GraphWrapper(digraph):
         ret += r"\end{deptext}"
         
         for u, v in self.edges():
-            ret += "\\depedge{{{0}}}{{{1}}}{{{2}}}\n".format(slots[u],slots[v],tex_escape(self.edge_label(u_v)))
+            ret += "\\depedge{{{0}}}{{{1}}}{{{2}}}\n".format(slots[u],slots[v],tex_escape(self.edge_label((u, v))))
     
         
         ret += boilerplate_end

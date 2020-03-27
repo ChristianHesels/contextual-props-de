@@ -42,7 +42,6 @@ def get_verbal_features(t):
                     feats[featType] = res
             else:
                 feats[featType] = res
-        
     return feats
 
 class SyntacticItem:

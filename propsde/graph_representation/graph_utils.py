@@ -457,6 +457,7 @@ def merge_nodes(gr, node1, node2):
     gr.del_nodes([node1, node2])
     
     # update lemma for merged predicates
+    
     if new.isPredicate:
         if rel_type == 'PM':
             print("PM")
@@ -492,6 +493,7 @@ def replace_head(gr, head, dependent):
                 if parent != dependent:
                     gr.add_edge((parent,dependent), parent_rel)
         # add features
+        print("UFF")
         dependent.features.update({k:x for k,x in head.features.items() if k not in dependent.features})
         gr.del_node(head)                
 
