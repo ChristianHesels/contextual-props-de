@@ -33,6 +33,7 @@ def get_verbal_features(t):
     verbalFuncList = SyntacticItem.funcList[prefix]
     feats={}
     
+    
     #iterate over functions and apply on the input
     for (featType,f) in verbalFuncList:
         res = f(t) 
@@ -49,11 +50,13 @@ class SyntacticItem:
     # conform to:
     #    - input: a dep tree, for which the head represents the predicate
     #    - output: (the name of the feature (string),the value of the feature, its span)
-    funcList = dict([(prefix,[(" ".join(fname.split("_")[4:]),f) for fname,f in inspect.getmembers(object=DepTree, predicate=inspect.ismethod)
+
+    funcList = dict([(prefix,[(" ".join(fname.split("_")[4:]),f) for fname,f in inspect.getmembers(object=DepTree)
                 if fname.startswith(prefix)]) for prefix in PREFIXES])
     
     #init with a dep tree and calculate the features, in addition receives the prefix by which to choose functions from the dep tree class 
     def __init__(self,predSubtree,prefix,time_ann_of_verb=0,tmp_function_tag_of_verb=0):
+
         self.prefix=prefix
         self.predSubtree = predSubtree
         #get all features names and functions from DepTree class which start with the indicator prefix

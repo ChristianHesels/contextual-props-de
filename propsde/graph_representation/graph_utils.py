@@ -457,7 +457,7 @@ def merge_nodes(gr, node1, node2):
     gr.del_nodes([node1, node2])
     
     # update lemma for merged predicates
-    
+   
     if new.isPredicate:
         if rel_type == 'PM':
             print("PM")
@@ -472,8 +472,7 @@ def merge_nodes(gr, node1, node2):
             predicate_form = u' '.join([w.word for w in node2.text]) + ' ' + node1.features.get("Lemma")
             new.features["Lemma"] = predicate_form
         if "cvc" in new.features:
-            new.features["Lemma"] = u' '.join([w.word for w in node1.text]) + ' ' + node2.features["Lemma"]    
-            
+            new.features["Lemma"] = u' '.join([w.word for w in node1.text]) + ' ' + node2.features["Lemma"] 
     return new
 
 def replace_head(gr, head, dependent):

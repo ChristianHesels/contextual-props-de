@@ -175,7 +175,8 @@ class Node:
                 ret+="</TD></TR>"
             
         ret +="</TABLE>" 
-        return str(ret)
+   
+        return ret.encode('utf-8')
         
     
     

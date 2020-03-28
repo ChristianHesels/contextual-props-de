@@ -225,7 +225,7 @@ class GraphWrapper(digraph):
 #             ret = digraph.add_edge(self,edge=basicEdge,label=label,wt=100)
         return ret
         
-    def __unicode__(self):
+    def __str__(self):
         ret = self.originalSentence+"\n"
         for i,node in enumerate(self.nodesMap.values()):
             ret += node.to_conll_like() + "\n"
@@ -1295,8 +1295,6 @@ def tex_escape(text):
     regex = re.compile('|'.join(re.escape(unicode(key)) for key in sorted(conv.keys(), key=lambda item:-len(item))))
     return regex.sub(lambda match: conv[match.group()], text)
     
-def __str__(self):
-    return "Test3"
 
 def duplicate_all_incidents(gr,source,target):
     """

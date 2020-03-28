@@ -79,7 +79,6 @@ def create_dep_graphs_from_conll(sentences_conll):
     graphs = []
     
     for sentence_conll in sentences_conll:
-    
         curGraph = GraphWrapper("","")
         nodesMap = {}
         

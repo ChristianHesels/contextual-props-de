@@ -24,7 +24,7 @@ def parseSentences(sentences):
 
     # call the dependency parser
     output_file = parser.parse(sentences)
-    
+
     # read and process output
     graphs = read_dep_graphs(None, output_file)
     

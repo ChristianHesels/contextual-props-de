@@ -20,8 +20,7 @@ from propsde.utils.utils import encode_german_characters
 HOME_DIR = os.environ.get("PROPEXTRACTION_DE_HOME_DIR", ".")
 
 # DepTree is a class representing a dependency tree
-class DepTree(object):
-
+class DepTree:
     def __init__(self,pos,word,id,parent=None,parent_id = None,parent_relation=None,children=[],wsj_id = 0, sent_id = 0, lemma=None, morph=None):
         self.children = children                             # List of node's children
         self.parent = parent                                  # Node's parent
@@ -54,15 +53,12 @@ class DepTree(object):
     def is_head_of_time_expression(self): return self.is_head_of_time_expression
     def get_children_relations(self): return [c.parent_relation for c in self.children]
 
-    def __unicode__(self):
-        if not self.children : return ""
-        str = ""
-        for child in self.children:
-            str += "%s(%s,%s)\n%s" % (child.get_parent_relation(), self.word,child.get_word() ,child)
-        return str
-        
     def __str__(self):
-        return unicode(self).encode('utf-8')
+        if not self.children : return ""
+        ret = ""
+        for child in self.children:
+            ret += "%s(%s,%s)\n%s" % (child.get_parent_relation(), self.word,child.get_word() ,child)
+        return ret
 
     def longest_path(self):
         if not self.children:
@@ -589,7 +585,7 @@ class DepTree(object):
         #span of the tokens involved - initialized to false
         span=0
         # check if one of dependents causes the negation of this predicate
-        negating_nodes = filter(lambda x:x.get_parent_relation() in negation_dependencies, self.children)
+        negating_nodes = list(filter(lambda x:x.get_parent_relation() in negation_dependencies, self.children))
         if not negating_nodes:
             negating_nodes = [c for c in self.children if
                               c.word in negating_words and len(c.children)==0]
@@ -647,9 +643,9 @@ class DepTree(object):
         span=0
         
         # a) marked by by-clause
-        passive_nodes = filter(lambda x: x.get_parent_relation() in ["SBP"] and x.parent.get_parent_relation() != "NK", self.children) 
+        passive_nodes = list(filter(lambda x: x.get_parent_relation() in ["SBP"] and x.parent.get_parent_relation() != "NK", self.children))
         # b) without by clause, vorgangspassiv
-        passive_nodes += filter(lambda x: x.get_parent_relation() in ["OC"] and x.pos in ["VVPP"] and x.parent.lemma == "werden", self.children)
+        passive_nodes += list(filter(lambda x: x.get_parent_relation() in ["OC"] and x.pos in ["VVPP"] and x.parent.lemma == "werden", self.children))
         # c) without by clause, zustandspassiv -> handled as copular
         
         if passive_nodes:
@@ -680,7 +676,7 @@ class DepTree(object):
     # returns (True/False, span) : True/False indicates if the node has children after the filter.
     #                              span indicates the filtered children min and max indexes
     def _get_span_of_filtered_children(self, child_func):
-        nodes = filter(lambda x:child_func(x), self.children)
+        nodes = list(filter(lambda x:child_func(x), self.children))
         if nodes == []:
             return False,(-1,-1), None
         ids = [x.id for x in nodes]
@@ -717,7 +713,7 @@ class DepTree(object):
         span=0
         
         # check if one of dependents indicates time of this predicate
-        time_nodes = filter(lambda x:x.get_parent_relation() in time_dependencies, self.children)
+        time_nodes = list(filter(lambda x:x.get_parent_relation() in time_dependencies, self.children))
         if time_nodes:
             span_list = []
             for time_node in time_nodes:
@@ -744,7 +740,7 @@ class DepTree(object):
 
     def _DONT_RUN_VERBAL_PREDICATE_FEATURE_TODO_prep_as(self):
 
-        relevant_children = filter(prep_as_child_func,self.children)
+        relevant_children = list(filter(prep_as_child_func,self.children))
         if not relevant_children:
             return False,False
         if (len(relevant_children) !=1):
@@ -1029,7 +1025,7 @@ class DepTree(object):
     def _DONT_RUN_VERBAL_PREDICATE_FEATURE_TODO_Infinitive(self):
         ret = [False,[]]
         if self.parent_relation in clausal_complement:
-            to_children = filter(lambda x:x.pos == TO, self.children)
+            to_children = list(filter(lambda x:x.pos == TO, self.children))
             ret[1].extend([c.id for c in to_children])
         if ret[1]:
             ret[0] = True
@@ -1039,17 +1035,17 @@ class DepTree(object):
 
 
     def _EXPERIMENTAL_VERBAL_PREDICATE_FEATURE_Infinitive(self):
-        xcomp_children = filter(lambda x:x.get_parent_relation() in clausal_complement, self.children)
+        xcomp_children = list(filter(lambda x:x.get_parent_relation() in clausal_complement, self.children))
         ret = ([],[])
         for xcomp_child in xcomp_children:
-            aux_children = filter(lambda x:x.get_parent_relation() in aux_dependencies, xcomp_child.children)
-            to_children = filter(lambda x:x.pos == TO, aux_children)
+            aux_children = list(filter(lambda x:x.get_parent_relation() in aux_dependencies, xcomp_child.children))
+            to_children = list(filter(lambda x:x.pos == TO, aux_children))
             if not to_children:
                 return (False,False)
             assert (len(to_children)==1)
             to_child = to_children[0]
-            subj_children = filter(lambda x:x.get_parent_relation() in subject_dependencies, xcomp_child.children)
-            adv_children = filter(lambda x:x.get_parent_relation() in adverb_dependencies, self.children)
+            subj_children = list(filter(lambda x:x.get_parent_relation() in subject_dependencies, xcomp_child.children))
+            adv_children = list(filter(lambda x:x.get_parent_relation() in adverb_dependencies, self.children))
 #           if subj_children:
 #               print(" ".join([self.word,subj_children[0].word,to_child.word,xcomp_child.word]))
 #           if adv_children:

@@ -84,7 +84,7 @@ def main(arguments):
                 except:
                     print('error creating props svg', file_name)
             #else:
-            print(unicode(g).encode('utf-8'))
+            print(str(g).encode('utf-8'))
         
         #print open ie like extractions
         if (arguments["--oie"]):
