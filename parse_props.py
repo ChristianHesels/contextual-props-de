@@ -27,6 +27,7 @@ import os.path
 from io import StringIO
 from subprocess import call
 
+
 from docopt import docopt
 from propsde.applications.viz_tree import DepTreeVisualizer
 
@@ -34,6 +35,9 @@ import propsde.applications.run as run
 import sys
 if sys.version_info[0] >= 3:
     unicode = str
+    
+    
+stdout_encoding = sys.stdout.encoding or sys.getfilesystemencoding()
     
 def main(arguments):
     
@@ -84,21 +88,20 @@ def main(arguments):
                 except:
                     print('error creating props svg', file_name)
             #else:
-            print(str(g).encode('utf-8'))
+
+            print(str(g))
         
         #print open ie like extractions
         if (arguments["--oie"]):
             for prop in g.getPropositions('pdf'):
-                print(unicode(prop).encode('utf-8'))
-            
-        print 
+                print(str(prop))
         i += 1
         
 
 if __name__ == "__main__":
     arguments = docopt(__doc__)
     if arguments["INPUT"]:
-        arguments["file"] = codecs.open(arguments["INPUT"], encoding='utf-8')
+        arguments["file"] = codecs.open(arguments["INPUT"], encoding='utf8')
     else:
         arguments["file"] = sys.stdin
     main(arguments)

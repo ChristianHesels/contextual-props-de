@@ -528,7 +528,6 @@ class GraphWrapper(digraph):
                     w = Word(index = u.maxIndex()+1,word=conjType)
                 u.text.append(w)
             merge_nodes(self, u, v)
-            print("Done")
             return True
         # special case: CVC
         for (verb,comp) in find_edges(self, lambda u_v: self.edge_label(u_v) == "CVC"):

@@ -45,12 +45,12 @@ class Proposition:
             bold = lambda t:t
             color = lambda t,color:t
         if HTML:
-            bold = lambda t: u"<b>{0}</b>".format(t)
-            color = lambda t,color: u'<font color="{0}">{1}</font>'.format(color,t)
+            bold = lambda t: "<b>{0}</b>".format(t)
+            color = lambda t,color: '<font color="{0}">{1}</font>'.format(color,t)
             
-        curProp = u'{0}:({1})'.format(bold(self.pred),
+        curProp = '{0}:({1})'.format(bold(self.pred),
                                       ", ".join([rel + ":" + bold(color(arg,"blue")) for rel,arg in sorted(self.args,key=lambda rel:self.rel_order(rel[0]))]))
-        return str(curProp)
+        return curProp
         
 
 

@@ -176,7 +176,7 @@ class Node:
             
         ret +="</TABLE>" 
    
-        return ret.encode('utf-8')
+        return ret
         
     
     
