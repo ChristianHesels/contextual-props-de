@@ -579,7 +579,7 @@ class GraphWrapper(digraph):
         edges = find_edges(self, lambda u_v:(self.edge_label(u_v) in ["MNR","MO","OP"]) and (len(self.neighbors(u_v[1])) == 1) and u_v[1].pos() in ['APPR','APPRART'])
         if edges:
             for u, v in edges:
-                pobj = v.neighbors().itervalues().next()[0]
+                pobj = next(iter(v.neighbors().values()))[0]
                 if not (self.has_edge((u, pobj))):
                     w = v.text[0]
                     u.surface_form += [w]
