@@ -53,16 +53,16 @@ Installation
 
 1. Clone this repository and navigate into the root folder.
 
-        git clone https://github.com/UKPLab/props-de.git 
+        git clone https://github.com/ChristianHesels/props-de.git
 		cd props-de
 
 2. Install required python packages.
 
-		pip install -r requirements.txt
+		pip3 install -r requirements.txt
 		
 3. In case you don't already have it, download NLTK's tokenization model.
 
-		python -c "import nltk; nltk.download('punkt')"
+		python3 -c "import nltk; nltk.download('punkt')"
 		
 4. Download java dependencies (Mate-Tools with models and JoBimText (173M)).
 
