@@ -127,7 +127,7 @@ class GraphWrapper(digraph):
 
     def get_components(self):
         graph_components = accessibility(self)
-        return {self.nodesMap[key.uid]:[self.nodesMap[v.uid] for v in value] for key, value in graph_components.iteritems() }
+        return {self.nodesMap[key.uid]:[self.nodesMap[v.uid] for v in value] for key, value in graph_components.items() }
 
     def add_node(self, node):
         """
