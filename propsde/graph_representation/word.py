@@ -31,7 +31,7 @@ class Word:
         ret = cgi.escape(self.word)
         if self.index != NO_INDEX:
             ret += '<FONT POINT-SIZE="7">[{0}]</FONT>'.format(self.index)
-        return ret
+        return cgi.escape(self.word)
     
     def __eq__(self,other_word):
         return (self.index == other_word.index) and (self.word == other_word.word)
