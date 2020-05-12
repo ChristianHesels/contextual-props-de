@@ -65,7 +65,6 @@ class ParserDE(object):
             conll.append(s2.toString())
             
         output = codecs.open(self.tmp+'/parsed.conll09', 'w', encoding='utf-8')
-        print(output)
         for s in conll:
             output.write(s + '\n')
         output.close()
