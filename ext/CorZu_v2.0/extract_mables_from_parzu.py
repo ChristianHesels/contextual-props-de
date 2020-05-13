@@ -6,13 +6,18 @@ Perform string matching (we do it here, not in the coreference resolver)
 Example usage: python extract_mables_from_conll.py examples/parsed.conll > examples/markables.txt
 """
 
-import os,re,sys,pdb,cPickle,operator,copy
+import os,re,sys,pdb,pickle,operator,copy
+
 from collections import defaultdict
 from get_subcat_frame import *
-
+from sys import argv
 global align_gold_boundaries, real_preprocessing
 align_gold_boundaries=False                             #align extracted markables to gold mention boundaries
 real_preprocessing=True                                 #switch for gold morphology
+
+__location__ = os.path.realpath(
+    os.path.join(os.getcwd(), os.path.dirname(__file__)))
+
 
 """ functions """
 def nn_str_matching(ante,anaph):    
@@ -303,12 +308,11 @@ male_names=eval(open(path+'data/male_names.txt','r').read())      #male first na
 female_names=eval(open(path+'data/female_names.txt','r').read())  #female first names
 """
 
-if os.path.isfile('mensch.txt'): person=eval(open('mensch.txt','r').read())  #Person descriptions extracted from Germanet 7 nomen.Mensch.xml
+if os.path.isfile(sys.path[0] + '/mensch.txt'): person=eval(open(sys.path[0] + '/mensch.txt','r').read())  #Person descriptions extracted from Germanet 7 nomen.Mensch.xml
 else: 
-    print >> sys.stderr,'Not using mensch.txt; consider using it for improved pronoun resolution performane (see README).'
     person=[]
-male_names=eval(open('male_names.txt','r').read())      #male first names, used for gender disambiguation of named entities
-female_names=eval(open('female_names.txt','r').read())  #female first names
+male_names=eval(open(sys.path[0] + '/male_names.txt','r').read())      #male first names, used for gender disambiguation of named entities
+female_names=eval(open(sys.path[0] + '/female_names.txt','r').read())  #female first names
 
 doc_counter=0
 
@@ -327,15 +331,13 @@ preds={}
 haben={}
 gmods={}
 determiners={}
-
 for line in open(sys.argv[1],'r').readlines():
-        
+
     if line=='\n' or line=='\t\t\t\t\t\t\t\t\t\n':    #newline is sentence boundary, start processing the aggregated sentence
     
         if not sentence==[]:
             sentences[str(sent_nr)]=sentence    
         for tok in sentence:
-        
             #find predicatives: "A is a B" etc.
             if tok[4] in ['NN'] and tok[7]=='pred':
                 try:
@@ -616,7 +618,7 @@ for line in open(sys.argv[1],'r').readlines():
 
 """ output """
             
-print 'docid= 1'
+print('docid= 1')
 
 if not koords==[]:
     mables+=koords  #include coordinated nps
@@ -705,25 +707,25 @@ for m in mables:
     mables2.append(m2)
     mable_nr+=1
 
-print 'mables=',mables2
-print 'coref=',coref        
+print('mables=',mables2)
+print('coref=',coref)
 str_matches=str_match(mables)
 #str_matches=str_match(list(reversed(mables)))
 str_matches2=[]
 for i in str_matches: str_matches2.append([j[0] for j in i])
-print 'str_matches=',str_matches2  
-print 'pposat_heads=',pposat_heads
-print 'nominal_mods=',dict(nominal_mods)
-print 'verbs=',all_verbs
-print 'preds=',preds
-print 'haben=',haben
-print 'gmods=',gmods
+print('str_matches=',str_matches2)
+print('pposat_heads=',pposat_heads)
+print('nominal_mods=',dict(nominal_mods))
+print('verbs=',all_verbs)
+print('preds=',preds)
+print('haben=',haben)
+print('gmods=',gmods)
 #print 'sentences=',sentences
-print 'definite=[]'
-print 'demonstrative=[]'
-print 'determiners=',determiners
-print 'prepositions=',prepositions
-print '####'          
+print('definite=[]')
+print('demonstrative=[]')
+print('determiners=',determiners)
+print('prepositions=',prepositions)
+print('####')          
 #sent_nr-=1                 
 
 
