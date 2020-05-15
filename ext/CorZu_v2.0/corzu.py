@@ -459,7 +459,7 @@ def get_best(ante_cands,ante_cands_csets,mable,docid):
                 raw_counts_twin_features[mable[4]]={}            
             
         if classifier=='thebeast':
-            f=open('mln/test.atoms','w')  #single test case
+            f=open(sys.path[0] + '/mln/test.atoms','w')  #single test case
             
         if classifier=='wapiti':
             wapiti_cmd=''   
@@ -547,7 +547,7 @@ def get_best(ante_cands,ante_cands_csets,mable,docid):
                 outs.append(out)
                 if out.startswith('End:coref'): 
                     break                                   
-            res_thebeast=open('mln/thebeast.res').read()
+            res_thebeast=open(sys.path[0] + '/mln/thebeast.res').read()
             try:
                 ante=re.search('>coref\n\d+.*?(\d+)',res_thebeast).group(1)
                 ante=next(a for a in all_antes if a[0]==int(ante))
@@ -1512,15 +1512,15 @@ def main(file1,file2='',file3=''):
         
         if classifier=='mle':
             global weights_global
-            if preprocessing=='gold': weights_global=eval(open('mle_weights_tmp','r').read())
-            if preprocessing=='real': weights_global=eval(open('mle_weights_real','r').read())
+            if preprocessing=='gold': weights_global=eval(open(sys.path[0] + '/mle_weights_tmp','r').read())
+            if preprocessing=='real': weights_global=eval(open(sys.path[0] + '/mle_weights_real','r').read())
             global raw_counts_twin_features            
             raw_counts_twin_features={}
             
             if twin_mode=='test':
                 global twin_weights_1st,twin_weights_2nd
-                twin_weights_1st=eval(open('mle_weights_twin_candidates_1st','r').read())
-                twin_weights_2nd=eval(open('mle_weights_twin_candidates_2nd','r').read())
+                twin_weights_1st=eval(open(sys.path[0] + '/mle_weights_twin_candidates_1st','r').read())
+                twin_weights_2nd=eval(open(sys.path[0] + '/mle_weights_twin_candidates_2nd','r').read())
             
         if classifier=='thebeast':            
             global thebeast
@@ -1878,12 +1878,12 @@ def main(file1,file2='',file3=''):
                         weights[pos][feat][val]=weight
 
             if preprocessing=='gold':                        
-                with open('mle_weights_tmp','w') as f: 
+                with open(sys.path[0] + '/mle_weights_tmp','w') as f: 
                     f.write(str(weights)+'\n')        
-                with open('mle_weights_tmp_raw_counts','w') as f: 
+                with open(sys.path[0] + '/mle_weights_tmp_raw_counts','w') as f: 
                     f.write(str(raw_counts)+'\n')                    
             if preprocessing=='real':                        
-                with open('mle_weights_real','w') as f: 
+                with open(sys.path[0] + '/mle_weights_real','w') as f: 
                     f.write(str(weights)+'\n')        
 
         if classifier=='wapiti':                       
@@ -1911,9 +1911,9 @@ def main(file1,file2='',file3=''):
                             twin_weights_1st[pos][feat][val]=weight_1st
                             weight_2nd=float(raw_counts_twin_features[pos][feat][val]['neg'])/(raw_counts_twin_features[pos][feat][val]['pos']+raw_counts_twin_features[pos][feat][val]['neg'])
                             twin_weights_2nd[pos][feat][val]=weight_2nd                        
-                with open('mle_weights_twin_candidates_1st','w') as f: 
+                with open(sys.path[0] + '/mle_weights_twin_candidates_1st','w') as f: 
                     f.write(str(twin_weights_1st)+'\n')    
-                with open('mle_weights_twin_candidates_2nd','w') as f: 
+                with open(sys.path[0] + '/mle_weights_twin_candidates_2nd','w') as f: 
                     f.write(str(twin_weights_2nd)+'\n')    
     
         if classifier=='thebeast':
@@ -2113,7 +2113,7 @@ def main(file1,file2='',file3=''):
         """ 
            
     if verb_postfilter=='train':   
-        f=open('verb_postfilter.arff','w')
+        f=open(sys.path[0] + '/verb_postfilter.arff','w')
         f.write('@RELATION verb_sel_pref\n\n')
         for n in verb_postfilter_feature_names: 
             f.write('@ATTRIBUTE '+n+' NUMERIC\n')
