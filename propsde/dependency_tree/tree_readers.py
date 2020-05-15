@@ -49,7 +49,8 @@ def get_conll_from_parser_file(file_parsed):
     for line in codecs.open(file_parsed, encoding='utf-8'):
         cols = line.strip().split('\t')
         if len(cols) == 10:
-            cols = cols[0:6] + ['_','_'] + cols[6:7] + ['_'] + cols[7:8]
+            cols = cols[0:6] + ['_','_'] + cols[6:7] + ['_'] + cols[7:8] + [cols[-1]]
+            
             sent.append(cols)
         else:
             if len(sent) > 0:
@@ -178,7 +179,6 @@ def read_dep_graphs(sent_ids,file_parsed):
     
     graphs = []
     for i,t in enumerate(trees):
-        
         curGraph,nodesMap = graphsFromFile[i]
         curGraph.set_original_sentence(t[0].original_sentence)
         curGraph.tree_str = u"\n".join(t[0].to_original_format().split("\n")[1:])
