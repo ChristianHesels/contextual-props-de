@@ -70,7 +70,7 @@ class Node:
     @type uid: int
     @var  uid: unique id for this node, to be able to distinguish nodes with identical features
     """
-    def __init__(self,text,isPredicate,features,gr,orderText = True,uid=-1):
+    def __init__(self,text,isPredicate,isCoreference,features,gr,orderText = True,uid=-1):
         """
         initialize a node object
         
@@ -79,6 +79,7 @@ class Node:
         """  
         self.isPredicate = isPredicate
         self.text = text
+        self.isCoreference = isCoreference
         self.surface_form = copy(text)
         self.features = features
         self.features["implicit"] = False
@@ -186,6 +187,7 @@ class Node:
                           unicode(int(self.features.get("top",False))),
                           u";".join([u",".join([self.gr.edge_label((father,self)),unicode(father.uid)]) for father in self.gr.incidents(self)])
                           ])
+        
         return ret
     
     def neighbors(self):

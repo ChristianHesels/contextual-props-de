@@ -85,21 +85,26 @@ def create_dep_graphs_from_conll(sentences_conll):
         
         # nodes
         for cols in sentence_conll:
+            isCoreference = False
             if cols[8] != '_':
+                if "(" in cols[-1] or ")" in cols[-1]:
+                    isCoreference == True
                 id = int(cols[0])
                 word_form = cols[1]
                 if not id in nodesMap:
                     nodesMap[id] = Node(text=[Word(index=id,word=word_form)],
-                                     isPredicate=False,
-                                     features={},
-                                     gr=curGraph,
-                                     orderText=True)
+                                        isPredicate=False,
+                                        isCoreference=isCoreference,
+                                        features={},
+                                        gr=curGraph,
+                                        orderText=True)
         nodesMap[0] = Node(text=[Word(index=0,word='ROOT')],
                              isPredicate=False,
+                             isCoreference = isCoreference,
                              features={},
                              gr=curGraph,
                              orderText=True)
-        
+
         # edges
         for cols in sentence_conll:
             if cols[8] != '_':
@@ -112,7 +117,6 @@ def create_dep_graphs_from_conll(sentences_conll):
                     curGraph.add_edge(edge=(headNode,depNode), label=rel)
 
         graphs.append((curGraph,nodesMap))
-        
     return graphs
 
 

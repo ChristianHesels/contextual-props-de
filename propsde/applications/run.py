@@ -23,7 +23,8 @@ def parseSentences(sentences):
         parser = ParserDE(False)
 
     # call the dependency parser
-    output_file = parser.parse(sentences)
+    #output_file = parser.parse(sentences)
+    output_file = "corzu_export"
 
     # read and process output
     graphs = read_dep_graphs(None, output_file)
