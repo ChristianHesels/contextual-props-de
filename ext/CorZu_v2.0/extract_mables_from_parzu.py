@@ -707,27 +707,28 @@ for m in mables:
     mables2.append(m2)
     mable_nr+=1
 
-print('mables=',mables2)
-print('coref=',coref)
+print 'mables=',mables2
+print 'coref=',coref
 str_matches=str_match(mables)
 #str_matches=str_match(list(reversed(mables)))
 str_matches2=[]
 for i in str_matches: str_matches2.append([j[0] for j in i])
-print('str_matches=',str_matches2)
-print('pposat_heads=',pposat_heads)
-print('nominal_mods=',dict(nominal_mods))
-print('verbs=',all_verbs)
-print('preds=',preds)
-print('haben=',haben)
-print('gmods=',gmods)
+print 'str_matches=',str_matches2
+print 'pposat_heads=',pposat_heads
+print 'nominal_mods=',dict(nominal_mods)
+print 'verbs=',all_verbs
+print 'preds=',preds
+print 'haben=',haben
+print 'gmods=',gmods
 #print 'sentences=',sentences
-print('definite=[]')
-print('demonstrative=[]')
-print('determiners=',determiners)
-print('prepositions=',prepositions)
-print('####')          
+print 'definite=[]'
+print 'demonstrative=[]'
+print 'determiners=',determiners
+print 'prepositions=',prepositions
+print '####'          
 #sent_nr-=1                 
 
 
 
 sys.stderr.write('\n')
+pickle
