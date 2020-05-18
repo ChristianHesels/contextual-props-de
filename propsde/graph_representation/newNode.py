@@ -70,7 +70,7 @@ class Node:
     @type uid: int
     @var  uid: unique id for this node, to be able to distinguish nodes with identical features
     """
-    def __init__(self,text,isPredicate,isCoreference,features,gr,orderText = True,uid=-1):
+    def __init__(self,text,isPredicate,coreference,features,gr,orderText = True,uid=-1):
         """
         initialize a node object
         
@@ -79,7 +79,7 @@ class Node:
         """  
         self.isPredicate = isPredicate
         self.text = text
-        self.isCoreference = isCoreference
+        self.coreference = coreference
         self.surface_form = copy(text)
         self.features = features
         self.features["implicit"] = False
@@ -253,7 +253,9 @@ def getPossesive(gr,index):
     return ret
     
     
-
+def get_coreference_node():
+    return self.coreference_node
+    
 def join(node1,node2,gr):
     """
     Returns a node which is the concatenation of two nodes

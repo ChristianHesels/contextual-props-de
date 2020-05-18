@@ -19,7 +19,6 @@ from propsde.utils.utils import encode_german_characters
 # 10/11: dep relation
 TIGER_FILE = ''
 
-
 def get_conll_from_tiger_file(sent_ids):
     target_ids = set(sent_ids)
     current_id = -1
@@ -75,36 +74,49 @@ def add_morph_features(file_parsed, sentences):
                 token[7] = morph[i][token[0]]
     return sentences
 
-def create_dep_graphs_from_conll(sentences_conll):
+def find_np(lines, id):
+    np = ""
+    indices = 0
+    for line in lines:
+        line_list = re.split('\t| +',line)
+        np += line_list[1] + " "
+        indices += 1
+        if line.strip().endswith(id + ')'):
+            return np, indices
+        
+def check_for_coreference(cols):
+    if "(" in cols[-1] or ")" in cols[-1]:
+        return cols[-1]
+    return None
 
+def create_dep_graphs_from_conll(sentences_conll):
     graphs = []
+    coreferenceMap = {}
+    coreference_node = None
     
     for sentence_conll in sentences_conll:
         curGraph = GraphWrapper("","")
         nodesMap = {}
-        
         # nodes
         for cols in sentence_conll:
-            isCoreference = False
             if cols[8] != '_':
-                if "(" in cols[-1] or ")" in cols[-1]:
-                    isCoreference == True
                 id = int(cols[0])
                 word_form = cols[1]
+                coreference = check_for_coreference(cols)
                 if not id in nodesMap:
                     nodesMap[id] = Node(text=[Word(index=id,word=word_form)],
                                         isPredicate=False,
-                                        isCoreference=isCoreference,
+                                        coreference=coreference,
                                         features={},
                                         gr=curGraph,
-                                        orderText=True)
+                                        orderText=True) 
+
         nodesMap[0] = Node(text=[Word(index=0,word='ROOT')],
                              isPredicate=False,
-                             isCoreference = isCoreference,
+                             coreference = coreference,
                              features={},
                              gr=curGraph,
                              orderText=True)
-
         # edges
         for cols in sentence_conll:
             if cols[8] != '_':
