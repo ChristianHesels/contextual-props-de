@@ -89,24 +89,43 @@ def check_for_coreference(cols):
         return cols[-1]
     return None
 
+def is_last_word_of_coreference(cols):
+    if ")" in cols[-1]:
+        return cols[-1]
+    return None
+
+def get_uids_from_coreference(coreference_map, sentences_conll, index):
+    i = 0
+    coref_id = int(re.findall(r'\d+', sentences_conll[index + i][-1])[0])
+    while(str(coref_id) + ")" not in sentences_conll[index + i][-1]):
+        if i == 0:
+            coreference_map[int(sentences_conll[index + i][0])] = sentences_conll[index + i][-1]
+        else:
+            coreference_map[int(sentences_conll[index + i][0])] = str(coref_id)
+        i += 1
+    coreference_map[int(sentences_conll[index + i][0])] = sentences_conll[index + i][-1]
+
 def create_dep_graphs_from_conll(sentences_conll):
     graphs = []
-    coreferenceMap = {}
+    
     coreference_node = None
     
     for sentence_conll in sentences_conll:
         curGraph = GraphWrapper("","")
         nodesMap = {}
+        coreference_map = {}
         # nodes
-        for cols in sentence_conll:
+        for i, cols in enumerate(sentence_conll):
             if cols[8] != '_':
                 id = int(cols[0])
                 word_form = cols[1]
                 coreference = check_for_coreference(cols)
+                if coreference:
+                    get_uids_from_coreference(coreference_map, sentence_conll, i)
                 if not id in nodesMap:
                     nodesMap[id] = Node(text=[Word(index=id,word=word_form)],
                                         isPredicate=False,
-                                        coreference=coreference,
+                                        coreference=coreference_map.get(id, None),
                                         features={},
                                         gr=curGraph,
                                         orderText=True) 
