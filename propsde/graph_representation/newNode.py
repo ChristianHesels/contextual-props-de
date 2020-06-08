@@ -253,9 +253,6 @@ def getPossesive(gr,index):
     return ret
     
     
-def get_coreference_node():
-    return self.coreference_node
-    
 def join(node1,node2,gr):
     """
     Returns a node which is the concatenation of two nodes
