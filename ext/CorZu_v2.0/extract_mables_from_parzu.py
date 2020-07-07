@@ -332,288 +332,290 @@ haben={}
 gmods={}
 determiners={}
 for line in open(sys.argv[1],'r').readlines():
-
-    if line=='\n' or line=='\t\t\t\t\t\t\t\t\t\n':    #newline is sentence boundary, start processing the aggregated sentence
-    
-        if not sentence==[]:
-            sentences[str(sent_nr)]=sentence    
-        for tok in sentence:
-            #find predicatives: "A is a B" etc.
-            if tok[4] in ['NN'] and tok[7]=='pred':
-                try:
-                    v_gov=next(t for t in sentence if t[4].startswith('V') and t[0]==tok[6] and t[2]=='sein')
-                    n_head=next(t for t in sentence if t[4] in ['NE','PPER'] and t[6]==v_gov[0] and int(t[0])<int(tok[0]) and not t[2]=='es')                   
-                    matching_mable=next(m for m in reversed(mables) if m[0]==sent_nr and int(n_head[0]) in range(int(m[1]),int(m[2])+1))    #find the matching mable
-                    nominal_mods[tuple(matching_mable[:2])].append(tok[2])  #store the predication as a nominal_mod
-                except StopIteration: True
-        
-            if tok[4] in ['PPER','PRELS','PRELAT','PPOSAT','PDS'] and not tok[2] in ['es','was']:     #pronouns                     
-                mable=[sent_nr,int(tok[0]),int(tok[0])]           #sentence number, markable extension start token, markable extension end token
-                mable.append(tok[4])                    #PoS-tag
-                ext=[tok]                               #extension, all tokens in the markable. here it, is only one token.
-                morph=get_morph(tok)                    #morphological features
-                mable+=morph
-                if tok[7]=='cj':    #Konjunktionen: GF ersetzen durch die des Kopfs
+    li=line.strip()
+    if not li.startswith("#"):
+        if line=='\n' or line=='\t\t\t\t\t\t\t\t\t\n':    #newline is sentence boundary, start processing the aggregated sentence
+            if not sentence==[]:
+                sentences[str(sent_nr)]=sentence    
+            for tok in sentence:
+                #find predicatives: "A is a B" etc.
+                print(tok)
+                if tok[4] in ['NN'] and tok[7]=='pred':
                     try:
-                        konj=next(t for t in sentence if t[0]==tok[6])
-                        head=next(t for t in sentence if t[0]==konj[6])
-                        tok[7]=head[7]
-                    except StopIteration: True                
-                if tok[7].upper()=='PN':
-                    if sentence[int(tok[6])-1][7].upper()=='OBJP':
-                        mable.append('OBJP')
-                    else:
-                        mable.append(tok[7].upper())            #gram. function 
-                else:
-                    mable.append(tok[7].upper())            #gram. function 
-                mable.append(tok[2])                    #lemma
-           
-                try:
-                    gov,mode=get_gov(tok,sentence)               #(full) verb governing the token, returns verb token id and lemma
-                    if mable[3]=='PPOSAT' and not gov is None:
-                        mable.append(int(gov[0]))
-                        mable.append(gov[2].replace('#','').replace('-',''))
-                    elif not gov is None and not mable[3]=='PPOSAT':
-                        mable.append(int(gov[0]))
-                        mable.append(gov[2].replace('#','').replace('-',''))
-                        if not mable[7]=='OBJP': 
-                            if mode=='passive' and mable[7]=='SUBJ':                       
-                                mable[7]='OBJA'
-                    verbs[sent_nr,int(gov[0])][mable[7].lower()]=tok
-                except TypeError:
-                    mable.append(0)
-                    mable.append('*')   
-                    
-                mable.append([tok[2]])                  #full markable string
-                conn='noconn'                           #check wheter the markable is preceded by a discourse connective
-                if not ext[0][0]==1:                    #not the first token of a sentence
-                    for i in range(sentence.index(ext[0])-1,-1,-1):   #look backwards
-                        if sentence[i][4]=='$,': break  #don't cross commas
-                        elif sentence[i][7] in ['subj','obja','objd'] or sentence[i][4].startswith('V'): break #don't cross these GFs
-                        elif sentence[i][4]=='KOUS' and not sentence[i][0]==1: 
-                            conn='conn'
-                            break
-                mable.append(conn)
-                mable.append('-')  #NE type
-                if tok[4]=='PPOSAT':
-                    try:
-                        pposat_head=next(t for t in sentence if t[0]==tok[6])
-                        pposat_heads[mable[0],mable[1]]=pposat_head
-                    except StopIteration: True            
-                
-                doit=True
-                if tok[4]=='PDS':
-                    #criterion for extracting PDS: either masculine, feminine, or plural. Not *jenige* and *jene*                
-                    if tok[1].lower()=='dessen' or 'jene' in tok[1].lower() or 'jenige' in tok[1].lower() or 'all' in tok[1].lower():
-                        doit=False
-                    if real_preprocessing:
-                        if not tok[5].endswith('Pl') and not tok[5].endswith('_') and not tok[5].startswith('Fem') and not tok[5].startswith('Masc'):
-                            doit=False
-                    else:
-                        if not tok[5].endswith('*') and not tok[5].endswith('m') and not tok[5].endswith('f'):
-                            doit=False    
-                if tok[7].upper()=='PN':
-                    prepositions[sent_nr,int(tok[0])]=sentence[int(tok[6])-1][2]                                            
-                if doit:                        
-                    mables.append(mable)                    #append markable to the list of markables
-                #determiners[(mable[0],mable[1])]='*'                
-
-            elif tok[4] in ['NN','NE']:                 #nouns
-                """
-                Apposition handling: 
-                1. if the preceding markable is a named entity, shift the head to the current token
-                [Lothar] Koring -> Lothar [Koring]
-                2. if the preceding markable is an apposition, shift the head to the current token
-                Landesvorsitzende [Ute] Wedemeier -> Landesvorsitzende Ute [Wedemeier]
-                3. the preceding markable must be the immediate predecessor of the current token
-                Problemtic: [Staatsanwaltschaft] Bremen -> Staatsanwaltschaft [Bremen]
-                -> Only do it if the apposition is a NE with NER tag PER?
-                """
-                if tok[7]=='app' and not mables==[]:      
-                    head=sentence[int(tok[6])-1]
-                    try:
-                        head_mable=next(m for m in reversed(mables) if sent_nr==m[0] and int(head[0]) in range(m[1],m[2]+1))
-                        if tok[4]=='NE':    #Die Kanzlerin, Angela Merkel
-                            if head_mable[3]=='NN': #store the nominal descriptor: Die [Kanzlerin], Angela Merkel, ... as we override it below
-                                nominal_mods[tuple(head_mable[:2])].append(head_mable[8]) 
-                            #else:                                                                
-                            head_mable[8]=tok[2]            #shift the head lemma
-                            head_mable[3]=tok[4]            #override PoS-tag        
-                            head_mable[-1]=tok[-2]          #NE tag
-                            if real_preprocessing==False:
-                                if not tok[5][-1]=='*' and head_mable[5]=='*' and tok[5][1]==head_mable[6]:   #gender match?                                 
-                                    head_mable[5]=tok[5][-1]
-                                    
-                        elif tok[4]=='NN' and head_mable[3]=='NE':# and head_mable[-1] in ['PER','ORG']:    #Angela Merkel, die Kanzlerin
-                            nominal_mods[tuple(head_mable[:2])].append(tok[2])  #store the nominal descriptor: Angela Merkel, die [Kanzlerin], ...   
-                        elif tok[4]=='NN' and head_mable[3]=='NN' and tok[2].isupper() and int(tok[0])<len(sentence) and sentence[int(tok[0])][1]==')':   # Umweltministerium (BMU)
-                            nominal_mods[tuple(head_mable[:2])].append(tok[2])
-                            
-                        """
-                        if tok[4]=='NE':    #Die Kanzlerin, Angela Merkel
-                            if tok[-2] in ['PER','ORG']:    #or only !='LOC' ?
-                                if head_mable[3]=='NN': #store the nominal descriptor: Die [Kanzlerin], Angela Merkel, ... as we override it below
-                                    nominal_mods[tuple(head_mable[:2])].append(head_mable[8]) 
-                                if head_mable[-1]=='PER' and not tok[-2]=='PER':    #Otto Schily (SPD) -> don't shift head to SPD
-                                    pass
-                                else:                                                                
-                                    head_mable[8]=tok[2]            #shift the head lemma
-                                    head_mable[3]=tok[4]            #override PoS-tag        
-                                    head_mable[-1]=tok[-2]          #NE tag
-                                    if real_preprocessing==False:
-                                        if not tok[5][-1]=='*' and head_mable[5]=='*' and tok[5][1]==head_mable[6]:   #gender match?                                 
-                                            head_mable[5]=tok[5][-1]
-                                    
-                            
-                        elif tok[4]=='NN' and head_mable[3]=='NE' and head_mable[-1] in ['PER','ORG']:    #Angela Merkel, die Kanzlerin
-                            nominal_mods[tuple(head_mable[:2])].append(tok[2])  #store the nominal descriptor: Angela Merkel, die [Kanzlerin], ...   
-
-
-                        elif tok[4]=='NN' and head_mable[3]=='NN' and tok[2].isupper() and int(tok[0])<len(sentence) and sentence[int(tok[0])][1]==')':   # Umweltministerium (BMU)
-                            nominal_mods[tuple(head_mable[:2])].append(tok[2])
-                        """            
-                                        
-                        if int(tok[0])>head_mable[2]:
-                            head_mable[2]=int(tok[0])            #expand the token extension end                            
-                    except StopIteration: pass
-
-                else:
-                    ext_borders=get_extension(tok,tok,sentence,[])  #search recursively for daughter tokens
-                    ext_borders.append(tok)
-                    ext_borders=sorted(ext_borders, key=lambda x: int(x[0]))
-                    ext=[m for m in sentence if int(m[0]) in range(int(ext_borders[0][0]),int(ext_borders[-1][0])+1)]                           
-                    try:
-                        #cut off conjunctions and relative sentences etc.
-                        border=next(m for m in ext if m[4] in ['PRELS','PRELAT','PWAV','KOUS','PROAV','ADJD','KON'] and int(m[0])>int(tok[0]))
-                        ext=ext[:ext.index(border)]
-                    except StopIteration:                                                   
-                        pass   
-                    while ext[-1][4] in ['APPR','$,','$.','KOUS','PTKNEG'] or ext[-1][4].startswith('V') or ext[-1][2]=='-': #cut extension end
-                        ext=ext[:-1]  
-                    while ext[0][2]=='/' or ext[0][4]=='PTKNEG': #cut extension start
-                        ext=ext[1:]                                                                
-                    mable=[sent_nr,int(ext[0][0]),int(ext[-1][0])] #sentence nr, token id start, token id end             
-                    mable.append(tok[4])                #PoS-tag       
-                    morph=get_morph(tok)                #morphological features
+                        v_gov=next(t for t in sentence if t[4].startswith('V') and t[0]==tok[6] and t[2]=='sein')
+                        n_head=next(t for t in sentence if t[4] in ['NE','PPER'] and t[6]==v_gov[0] and int(t[0])<int(tok[0]) and not t[2]=='es')                   
+                        matching_mable=next(m for m in reversed(mables) if m[0]==sent_nr and int(n_head[0]) in range(int(m[1]),int(m[2])+1))    #find the matching mable
+                        nominal_mods[tuple(matching_mable[:2])].append(tok[2])  #store the predication as a nominal_mod
+                    except StopIteration: True
+            
+                if tok[4] in ['PPER','PRELS','PRELAT','PPOSAT','PDS'] and not tok[2] in ['es','was']:     #pronouns                     
+                    mable=[sent_nr,int(tok[0]),int(tok[0])]           #sentence number, markable extension start token, markable extension end token
+                    mable.append(tok[4])                    #PoS-tag
+                    ext=[tok]                               #extension, all tokens in the markable. here it, is only one token.
+                    morph=get_morph(tok)                    #morphological features
                     mable+=morph
+                    if tok[7]=='cj':    #Konjunktionen: GF ersetzen durch die des Kopfs
+                        try:
+                            konj=next(t for t in sentence if t[0]==tok[6])
+                            head=next(t for t in sentence if t[0]==konj[6])
+                            tok[7]=head[7]
+                        except StopIteration: True                
                     if tok[7].upper()=='PN':
                         if sentence[int(tok[6])-1][7].upper()=='OBJP':
                             mable.append('OBJP')
                         else:
-                            mable.append(tok[7].upper())            #gram. function                             
+                            mable.append(tok[7].upper())            #gram. function 
                     else:
                         mable.append(tok[7].upper())            #gram. function 
-                    mable.append(tok[2])                #lemma
-
-
-                    #determine the determiner
+                    mable.append(tok[2])                    #lemma
+               
                     try:
-                        det=next(m for m in ext if m[6]==tok[0] and int(m[0])<int(tok[0]) and m[4] in ['ART','PIAT','PDAT','CARD','APPRART','PPOSAT'])
-                        if det[4] in ['ART','PIAT','PDAT']:
-                            determiners[(mable[0],mable[1])]=det[2]
-                        elif det[4] in ['CARD','APPRART','PPOSAT']:
-                            determiners[(mable[0],mable[1])]=det[4]
-                        if not det in ext:pdb.set_trace()
-                    except StopIteration:
-                        determiners[(mable[0],mable[1])]='*'
-                    #(full) verb governing the token, returns verb token id & lemma
-                    try:
-                        gov,mode=get_gov(tok,sentence)           
-                        mable.append(int(gov[0]))
-                        mable.append(gov[2].replace('#','').replace('-',''))
-                        if not mable[7]=='OBJP': 
-                            if mode=='passive' and mable[7]=='SUBJ':                       
-                                mable[7]='OBJA'  
-                        verbs[sent_nr,int(gov[0])][mable[7].lower()]=tok                                                              
-                    except TypeError:   # get_gov returned None
+                        gov,mode=get_gov(tok,sentence)               #(full) verb governing the token, returns verb token id and lemma
+                        if mable[3]=='PPOSAT' and not gov is None:
+                            mable.append(int(gov[0]))
+                            mable.append(gov[2].replace('#','').replace('-',''))
+                        elif not gov is None and not mable[3]=='PPOSAT':
+                            mable.append(int(gov[0]))
+                            mable.append(gov[2].replace('#','').replace('-',''))
+                            if not mable[7]=='OBJP': 
+                                if mode=='passive' and mable[7]=='SUBJ':                       
+                                    mable[7]='OBJA'
+                        verbs[sent_nr,int(gov[0])][mable[7].lower()]=tok
+                    except TypeError:
                         mable.append(0)
-                        mable.append('*')                        
-                                        
-                    #sort the extension on the token id, first element. it's a string
-                    mable.append([m[2] for m in ext]) #markable extension string, needed for string matching
-                    conn='noconn'                       #check wheter the markable is preceded by a discourse connective
-                    if not ext[0][0]=='1':
-                        for i in range(sentence.index(ext[0]),-1,-1):     #look backwards from mable                   
-                            if sentence[i][4]=='$,': break                  #don't cross commas
+                        mable.append('*')   
+                        
+                    mable.append([tok[2]])                  #full markable string
+                    conn='noconn'                           #check wheter the markable is preceded by a discourse connective
+                    if not ext[0][0]==1:                    #not the first token of a sentence
+                        for i in range(sentence.index(ext[0])-1,-1,-1):   #look backwards
+                            if sentence[i][4]=='$,': break  #don't cross commas
                             elif sentence[i][7] in ['subj','obja','objd'] or sentence[i][4].startswith('V'): break #don't cross these GFs
                             elif sentence[i][4]=='KOUS' and not sentence[i][0]==1: 
                                 conn='conn'
                                 break
                     mable.append(conn)
-                    mable.append(tok[-2])   #NE type
-                    if tok[7].upper()=='PN':
-                        prepositions[sent_nr,int(ext[0][0])]=sentence[int(tok[6])-1][2]                      
-                    mables.append(mable)                #append markable to the list of markables
-                    if tok[7]=='gmod':
+                    mable.append('-')  #NE type
+                    if tok[4]=='PPOSAT':
                         try:
-                            gmod_head=next(t for t in sentence if t[0]==tok[6])
-                            #gmods[str(sent_nr)+'-'+tok[0]]=gmod_head
-                            gmods[str(sent_nr)+'-'+str(mable[1])]=gmod_head
+                            pposat_head=next(t for t in sentence if t[0]==tok[6])
+                            pposat_heads[mable[0],mable[1]]=pposat_head
+                        except StopIteration: True            
+                    
+                    doit=True
+                    if tok[4]=='PDS':
+                        #criterion for extracting PDS: either masculine, feminine, or plural. Not *jenige* and *jene*                
+                        if tok[1].lower()=='dessen' or 'jene' in tok[1].lower() or 'jenige' in tok[1].lower() or 'all' in tok[1].lower():
+                            doit=False
+                        if real_preprocessing:
+                            if not tok[5].endswith('Pl') and not tok[5].endswith('_') and not tok[5].startswith('Fem') and not tok[5].startswith('Masc'):
+                                doit=False
+                        else:
+                            if not tok[5].endswith('*') and not tok[5].endswith('m') and not tok[5].endswith('f'):
+                                doit=False    
+                    if tok[7].upper()=='PN':
+                        prepositions[sent_nr,int(tok[0])]=sentence[int(tok[6])-1][2]                                            
+                    if doit:                        
+                        mables.append(mable)                    #append markable to the list of markables
+                    #determiners[(mable[0],mable[1])]='*'                
+    
+                elif tok[4] in ['NN','NE']:                 #nouns
+                    """
+                    Apposition handling: 
+                    1. if the preceding markable is a named entity, shift the head to the current token
+                    [Lothar] Koring -> Lothar [Koring]
+                    2. if the preceding markable is an apposition, shift the head to the current token
+                    Landesvorsitzende [Ute] Wedemeier -> Landesvorsitzende Ute [Wedemeier]
+                    3. the preceding markable must be the immediate predecessor of the current token
+                    Problemtic: [Staatsanwaltschaft] Bremen -> Staatsanwaltschaft [Bremen]
+                    -> Only do it if the apposition is a NE with NER tag PER?
+                    """
+                    if tok[7]=='app' and not mables==[]:      
+                        head=sentence[int(tok[6])-1]
+                        try:
+                            head_mable=next(m for m in reversed(mables) if sent_nr==m[0] and int(head[0]) in range(m[1],m[2]+1))
+                            if tok[4]=='NE':    #Die Kanzlerin, Angela Merkel
+                                if head_mable[3]=='NN': #store the nominal descriptor: Die [Kanzlerin], Angela Merkel, ... as we override it below
+                                    nominal_mods[tuple(head_mable[:2])].append(head_mable[8]) 
+                                #else:                                                                
+                                head_mable[8]=tok[2]            #shift the head lemma
+                                head_mable[3]=tok[4]            #override PoS-tag        
+                                head_mable[-1]=tok[-2]          #NE tag
+                                if real_preprocessing==False:
+                                    if not tok[5][-1]=='*' and head_mable[5]=='*' and tok[5][1]==head_mable[6]:   #gender match?                                 
+                                        head_mable[5]=tok[5][-1]
+                                        
+                            elif tok[4]=='NN' and head_mable[3]=='NE':# and head_mable[-1] in ['PER','ORG']:    #Angela Merkel, die Kanzlerin
+                                nominal_mods[tuple(head_mable[:2])].append(tok[2])  #store the nominal descriptor: Angela Merkel, die [Kanzlerin], ...   
+                            elif tok[4]=='NN' and head_mable[3]=='NN' and tok[2].isupper() and int(tok[0])<len(sentence) and sentence[int(tok[0])][1]==')':   # Umweltministerium (BMU)
+                                nominal_mods[tuple(head_mable[:2])].append(tok[2])
+                                
+                            """
+                            if tok[4]=='NE':    #Die Kanzlerin, Angela Merkel
+                                if tok[-2] in ['PER','ORG']:    #or only !='LOC' ?
+                                    if head_mable[3]=='NN': #store the nominal descriptor: Die [Kanzlerin], Angela Merkel, ... as we override it below
+                                        nominal_mods[tuple(head_mable[:2])].append(head_mable[8]) 
+                                    if head_mable[-1]=='PER' and not tok[-2]=='PER':    #Otto Schily (SPD) -> don't shift head to SPD
+                                        pass
+                                    else:                                                                
+                                        head_mable[8]=tok[2]            #shift the head lemma
+                                        head_mable[3]=tok[4]            #override PoS-tag        
+                                        head_mable[-1]=tok[-2]          #NE tag
+                                        if real_preprocessing==False:
+                                            if not tok[5][-1]=='*' and head_mable[5]=='*' and tok[5][1]==head_mable[6]:   #gender match?                                 
+                                                head_mable[5]=tok[5][-1]
+                                        
+                                
+                            elif tok[4]=='NN' and head_mable[3]=='NE' and head_mable[-1] in ['PER','ORG']:    #Angela Merkel, die Kanzlerin
+                                nominal_mods[tuple(head_mable[:2])].append(tok[2])  #store the nominal descriptor: Angela Merkel, die [Kanzlerin], ...   
+    
+    
+                            elif tok[4]=='NN' and head_mable[3]=='NN' and tok[2].isupper() and int(tok[0])<len(sentence) and sentence[int(tok[0])][1]==')':   # Umweltministerium (BMU)
+                                nominal_mods[tuple(head_mable[:2])].append(tok[2])
+                            """            
+                                            
+                            if int(tok[0])>head_mable[2]:
+                                head_mable[2]=int(tok[0])            #expand the token extension end                            
+                        except StopIteration: pass
+    
+                    else:
+                        ext_borders=get_extension(tok,tok,sentence,[])  #search recursively for daughter tokens
+                        ext_borders.append(tok)
+                        ext_borders=sorted(ext_borders, key=lambda x: int(x[0]))
+                        ext=[m for m in sentence if int(m[0]) in range(int(ext_borders[0][0]),int(ext_borders[-1][0])+1)]                           
+                        try:
+                            #cut off conjunctions and relative sentences etc.
+                            border=next(m for m in ext if m[4] in ['PRELS','PRELAT','PWAV','KOUS','PROAV','ADJD','KON'] and int(m[0])>int(tok[0]))
+                            ext=ext[:ext.index(border)]
+                        except StopIteration:                                                   
+                            pass   
+                        while ext[-1][4] in ['APPR','$,','$.','KOUS','PTKNEG'] or ext[-1][4].startswith('V') or ext[-1][2]=='-': #cut extension end
+                            ext=ext[:-1]  
+                        while ext[0][2]=='/' or ext[0][4]=='PTKNEG': #cut extension start
+                            ext=ext[1:]                                                                
+                        mable=[sent_nr,int(ext[0][0]),int(ext[-1][0])] #sentence nr, token id start, token id end             
+                        mable.append(tok[4])                #PoS-tag       
+                        morph=get_morph(tok)                #morphological features
+                        mable+=morph
+                        if tok[7].upper()=='PN':
+                            if sentence[int(tok[6])-1][7].upper()=='OBJP':
+                                mable.append('OBJP')
+                            else:
+                                mable.append(tok[7].upper())            #gram. function                             
+                        else:
+                            mable.append(tok[7].upper())            #gram. function 
+                        mable.append(tok[2])                #lemma
+    
+    
+                        #determine the determiner
+                        try:
+                            det=next(m for m in ext if m[6]==tok[0] and int(m[0])<int(tok[0]) and m[4] in ['ART','PIAT','PDAT','CARD','APPRART','PPOSAT'])
+                            if det[4] in ['ART','PIAT','PDAT']:
+                                determiners[(mable[0],mable[1])]=det[2]
+                            elif det[4] in ['CARD','APPRART','PPOSAT']:
+                                determiners[(mable[0],mable[1])]=det[4]
+                            if not det in ext:pdb.set_trace()
                         except StopIteration:
-                            True          
-                    #Koordinierte NPen
-                    if tok[7]=='cj':
-                        try:                        
-                            und=next(k for k in sentence if k[2] in ['und','&'] and k[0]==tok[6])   #"und" regiert die NP
-                            #maybe: if the tok is NN and sing, require determiner?
-                            koord_head=next(k for k in sentence if k[0]==und[6] and k[4] in ['NN','NE'])   #the coordination head is a noun
-                            if len(mables)>2:
-                                if koord_head[2]==mables[-2][8]:
-                                    koord=copy.deepcopy(mables[-2]) #copy the coordination head                                   
-                                    koord[2]=int(mable[2])   #extension
-                                    koord[5]='*'    #gender
-                                    koord[6]='PL'    #number
-                                    #koord[8]=koord[8]+' '+und[2]+' '+str(mable[8]) #head string: Detlev und Karin
-                                    koord[8]=koord[8]+' und '+str(mable[8])
-                                    #koord[11].append(und[2])
-                                    koord[11].append('und')
-                                    koord[11]+=list(mable[11])
-                                    koords.append(koord)      
-                                elif koord_head[2]==mables[-3][8]:    
-                                    koord=copy.deepcopy(mables[-3]) #copy the coordination head
-                                    koord[2]=int(mable[2])   #extension
-                                    koord[5]='*'    #gender
-                                    koord[6]='PL'    #number
-                                    #koord[8]=koord[8]+' '+und[2]+' '+str(mable[8])    #head string: Detlev und Karin
-                                    koord[8]=koord[8]+' und '+str(mable[8]) #head string: Detlev und Karin                                                    
-                                    koord[11].append('und')
-                                    koord[11]+=list(mable[11])
-                                    koords.append(koord)         
-                        except StopIteration: True                                      
-      
-
-            #coref info
-            if not tok[-1].endswith('-') and not tok[-1].endswith('_'): #and not tok[4]=='PRF': #no reflexives
-                for id in tok[-1].split('|'):
-                    cid=int(re.search('\d+',id).group())
-                    if re.match('\(\d+\)',id):
-                        if coref.has_key(cid): coref[cid].append([sent_nr,int(tok[0]),int(tok[0])])
-                        else: coref[cid]=[[sent_nr,int(tok[0]),int(tok[0])]]
-                    elif re.match('\(\d+',id):
-                        aggr.insert(0,[cid,sent_nr,int(tok[0])])
-                    elif re.match('\d+\)',id):
-                        for ext in aggr:
-                            if ext[0]==cid:
-                                aggr.remove(ext)
-                                ext=ext[1:]
-                                ext.append(int(tok[0]))
-                                break
-                        if coref.has_key(cid): coref[cid].append(ext)
-                        else: coref[cid]=[ext]
-                    else: pdb.set_trace()
-
-        #if not verbs=={}:pdb.set_trace()      
-        verbs=get_subcat(verbs,sentence)         
-        all_verbs.update(verbs)
-        verbs=defaultdict(dict)
-        sentence=[]
-        sent_nr+=1
-        
-    else:                                               #aggregate sentence tokens
-        line=line.strip().split('\t')
-        if not line==['']:
-            sentence.append(line)
-            #sentence.append([int(line[0])]+line[1:])
+                            determiners[(mable[0],mable[1])]='*'
+                        #(full) verb governing the token, returns verb token id & lemma
+                        try:
+                            gov,mode=get_gov(tok,sentence)           
+                            mable.append(int(gov[0]))
+                            mable.append(gov[2].replace('#','').replace('-',''))
+                            if not mable[7]=='OBJP': 
+                                if mode=='passive' and mable[7]=='SUBJ':                       
+                                    mable[7]='OBJA'  
+                            verbs[sent_nr,int(gov[0])][mable[7].lower()]=tok                                                              
+                        except TypeError:   # get_gov returned None
+                            mable.append(0)
+                            mable.append('*')                        
+                                            
+                        #sort the extension on the token id, first element. it's a string
+                        mable.append([m[2] for m in ext]) #markable extension string, needed for string matching
+                        conn='noconn'                       #check wheter the markable is preceded by a discourse connective
+                        if not ext[0][0]=='1':
+                            for i in range(sentence.index(ext[0]),-1,-1):     #look backwards from mable                   
+                                if sentence[i][4]=='$,': break                  #don't cross commas
+                                elif sentence[i][7] in ['subj','obja','objd'] or sentence[i][4].startswith('V'): break #don't cross these GFs
+                                elif sentence[i][4]=='KOUS' and not sentence[i][0]==1: 
+                                    conn='conn'
+                                    break
+                        mable.append(conn)
+                        mable.append(tok[-2])   #NE type
+                        if tok[7].upper()=='PN':
+                            prepositions[sent_nr,int(ext[0][0])]=sentence[int(tok[6])-1][2]                      
+                        mables.append(mable)                #append markable to the list of markables
+                        if tok[7]=='gmod':
+                            try:
+                                gmod_head=next(t for t in sentence if t[0]==tok[6])
+                                #gmods[str(sent_nr)+'-'+tok[0]]=gmod_head
+                                gmods[str(sent_nr)+'-'+str(mable[1])]=gmod_head
+                            except StopIteration:
+                                True          
+                        #Koordinierte NPen
+                        if tok[7]=='cj':
+                            try:                        
+                                und=next(k for k in sentence if k[2] in ['und','&'] and k[0]==tok[6])   #"und" regiert die NP
+                                #maybe: if the tok is NN and sing, require determiner?
+                                koord_head=next(k for k in sentence if k[0]==und[6] and k[4] in ['NN','NE'])   #the coordination head is a noun
+                                if len(mables)>2:
+                                    if koord_head[2]==mables[-2][8]:
+                                        koord=copy.deepcopy(mables[-2]) #copy the coordination head                                   
+                                        koord[2]=int(mable[2])   #extension
+                                        koord[5]='*'    #gender
+                                        koord[6]='PL'    #number
+                                        #koord[8]=koord[8]+' '+und[2]+' '+str(mable[8]) #head string: Detlev und Karin
+                                        koord[8]=koord[8]+' und '+str(mable[8])
+                                        #koord[11].append(und[2])
+                                        koord[11].append('und')
+                                        koord[11]+=list(mable[11])
+                                        koords.append(koord)      
+                                    elif koord_head[2]==mables[-3][8]:    
+                                        koord=copy.deepcopy(mables[-3]) #copy the coordination head
+                                        koord[2]=int(mable[2])   #extension
+                                        koord[5]='*'    #gender
+                                        koord[6]='PL'    #number
+                                        #koord[8]=koord[8]+' '+und[2]+' '+str(mable[8])    #head string: Detlev und Karin
+                                        koord[8]=koord[8]+' und '+str(mable[8]) #head string: Detlev und Karin                                                    
+                                        koord[11].append('und')
+                                        koord[11]+=list(mable[11])
+                                        koords.append(koord)         
+                            except StopIteration: True                                      
+          
+    
+                #coref info
+                """
+                if not tok[-1].endswith('-') and not tok[-1].endswith('_'): #and not tok[4]=='PRF': #no reflexives
+                    for id in tok[-1].split('|'):
+                        cid=int(re.search('\d+',id).group())
+                        if re.match('\(\d+\)',id):
+                            if coref.has_key(cid): coref[cid].append([sent_nr,int(tok[0]),int(tok[0])])
+                            else: coref[cid]=[[sent_nr,int(tok[0]),int(tok[0])]]
+                        elif re.match('\(\d+',id):
+                            aggr.insert(0,[cid,sent_nr,int(tok[0])])
+                        elif re.match('\d+\)',id):
+                            for ext in aggr:
+                                if ext[0]==cid:
+                                    aggr.remove(ext)
+                                    ext=ext[1:]
+                                    ext.append(int(tok[0]))
+                                    break
+                            if coref.has_key(cid): coref[cid].append(ext)
+                            else: coref[cid]=[ext]
+                        else: pdb.set_trace()
+            """
+            #if not verbs=={}:pdb.set_trace()      
+            verbs=get_subcat(verbs,sentence)         
+            all_verbs.update(verbs)
+            verbs=defaultdict(dict)
+            sentence=[]
+            sent_nr+=1
+            
+        else:                                               #aggregate sentence tokens
+            line=line.strip().split('\t')
+            if not line==['']:
+                sentence.append(line)
+                #sentence.append([int(line[0])]+line[1:])
                     
 
 """ output """
