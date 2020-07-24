@@ -10,16 +10,15 @@ import json
 import sys
 
 def build_elmo():
-  token_ph = tf.placeholder(tf.string, [None, None])
-  len_ph = tf.placeholder(tf.int32, [None])
-  elmo_module = hub.Module("https://tfhub.dev/google/elmo/2")
-  lm_embeddings = elmo_module(
-      inputs={"tokens": token_ph, "sequence_len": len_ph},
-      signature="tokens", as_dict=True)
-  word_emb = lm_embeddings["word_emb"]
-  lm_emb = tf.stack([tf.concat([word_emb, word_emb], -1),
-                     lm_embeddings["lstm_outputs1"],
-                     lm_embeddings["lstm_outputs2"]], -1)
+  with tf.device('/gpu:0'):
+      token_ph = tf.placeholder(tf.string, [None, None])
+      len_ph = tf.placeholder(tf.int32, [None])
+      elmo_module = hub.Module("https://tfhub.dev/google/elmo/2")
+      lm_embeddings = elmo_module(
+          inputs={"tokens": token_ph, "sequence_len": len_ph},
+          signature="tokens", as_dict=True)
+      word_emb = lm_embeddings["word_emb"]
+      lm_emb = tf.stack([tf.concat([word_emb, word_emb], -1), lm_embeddings["lstm_outputs1"], lm_embeddings["lstm_outputs2"]], -1)
   return token_ph, len_ph, lm_emb
 
 def cache_dataset(data_path, session, token_ph, len_ph, lm_emb, out_file):
@@ -47,6 +46,14 @@ def cache_dataset(data_path, session, token_ph, len_ph, lm_emb, out_file):
         print("Cached {} documents in {}".format(doc_num + 1, data_path))
 
 if __name__ == "__main__":
+  physical_devices = tf.config.experimental.list_physical_devices('GPU')
+  tf.config.experimental.set_memory_growth(physical_devices[0], True)
+  if tf.test.gpu_device_name(): 
+    print('Default GPU Device:{}'.format(tf.test.gpu_device_name()))
+  else:
+    print("Please install GPU version of TF")
+  config = tf.ConfigProto()
+  config.gpu_options.allow_growth = True
   token_ph, len_ph, lm_emb = build_elmo()
   with tf.Session() as session:
     session.run(tf.global_variables_initializer())

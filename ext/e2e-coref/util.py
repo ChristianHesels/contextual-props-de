@@ -188,8 +188,11 @@ class EmbeddingDictionary(object):
           word_end = line.find(" ")
           word = line[:word_end]
           embedding = np.fromstring(line[word_end + 1:], np.float32, sep=" ")
-          assert len(embedding) == self.size
-          embedding_dict[word] = embedding
+          try:
+            assert len(embedding) == self.size
+            embedding_dict[word] = embedding
+          except:
+            print("SIZES:", len(embedding), self.size, word)
       if vocab_size is not None:
         assert vocab_size == len(embedding_dict)
       print("Done loading word embeddings.")

@@ -713,7 +713,6 @@ def get_best(ante_cands,ante_cands_csets,mable,docid):
                 weighted_antes.append([reduce(operator.mul,weight.values()),a,weight])  #product of the weights
                                          
         if mode=='test':
-            
             if not weighted_antes==[]:
                 weighted_antes.sort(reverse=True)
                 ante=weighted_antes[0][1]

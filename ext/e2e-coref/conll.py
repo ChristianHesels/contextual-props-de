@@ -12,6 +12,7 @@ import operator
 import collections
 
 BEGIN_DOCUMENT_REGEX = re.compile(r"#begin document \((.*)\); part (\d+)")
+BEGIN_TUEBADZ_DOCUMENT_REGEX = re.compile(r"#begin document")
 COREF_RESULTS_REGEX = re.compile(r".*Coreference: Recall: \([0-9.]+ / [0-9.]+\) ([0-9.]+)%\tPrecision: \([0-9.]+ / [0-9.]+\) ([0-9.]+)%\tF1: ([0-9.]+)%.*", re.DOTALL)
 
 def get_doc_key(doc_id, part):
@@ -67,7 +68,7 @@ def output_conll(input_file, output_file, predictions):
       else:
         row[-1] = "|".join(coref_list)
 
-      output_file.write("   ".join(row))
+      output_file.write("   ".join(row.encode("utf-8")))
       output_file.write("\n")
       word_index += 1
 
