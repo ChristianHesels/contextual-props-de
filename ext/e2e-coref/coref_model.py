@@ -93,16 +93,17 @@ class CorefModel(object):
     session.run(tf.global_variables_initializer())
     saver.restore(session, checkpoint_path)
 
-  def load_lm_embeddings(self, doc_key):
+  def load_lm_embeddings(self, doc_key, doc_length):
     if self.lm_file is None:
       return np.zeros([0, 0, self.lm_size, self.lm_layers])
-    file_key = doc_key.replace("/", ":")
-    group = self.lm_file[file_key]
-    num_sentences = len(list(group.keys()))
-    sentences = [group[str(i)][...] for i in range(num_sentences)]
-    lm_emb = np.zeros([num_sentences, max(s.shape[0] for s in sentences), self.lm_size, self.lm_layers])
+    sentences = []
+    for i in range(doc_length):
+        sentences.append(self.lm_file[doc_key + "." + str(i + 1)])
+
+    lm_emb = np.zeros([doc_length, max(s.shape[0] for s in sentences), self.lm_size])
     for i, s in enumerate(sentences):
-      lm_emb[i, :s.shape[0], :, :] = s
+      lm_emb[i, :s.shape[0], :] = s
+    lm_emb = lm_emb.reshape(lm_emb.shape[0], lm_emb.shape[1], lm_emb.shape[2], 1)
     return lm_emb
 
   def tensorize_mentions(self, mentions):
@@ -153,14 +154,13 @@ class CorefModel(object):
     speaker_dict = { s:i for i,s in enumerate(set(speakers)) }
     speaker_ids = np.array([speaker_dict[s] for s in speakers])
 
-    doc_key = example["doc_key"]
+    doc_key = example["doc_key"].replace("\n", "")
 
 
-    genre = "nachricht"
+    genre = 0
 
     gold_starts, gold_ends = self.tensorize_mentions(gold_mentions)
-
-    lm_emb = self.load_lm_embeddings(doc_key)
+    lm_emb = self.load_lm_embeddings(doc_key, len(tokens))
 
     example_tensors = (tokens, context_word_emb, head_word_emb, lm_emb, char_index, text_len, speaker_ids, genre, is_training, gold_starts, gold_ends, cluster_ids)
 
@@ -553,11 +553,12 @@ class CorefModel(object):
       feed_dict = {i:t for i,t in zip(self.input_tensors, tensorized_example)}
       candidate_starts, candidate_ends, candidate_mention_scores, top_span_starts, top_span_ends, top_antecedents, top_antecedent_scores = session.run(self.predictions, feed_dict=feed_dict)
       predicted_antecedents = self.get_predicted_antecedents(top_antecedents, top_antecedent_scores)
-      coref_predictions[example["doc_key"]] = self.evaluate_coref(top_span_starts, top_span_ends, predicted_antecedents, example["clusters"], coref_evaluator)
+      coref_predictions[example["doc_key"].replace("\n", "")] = self.evaluate_coref(top_span_starts, top_span_ends, predicted_antecedents, example["clusters"], coref_evaluator)
       if example_num % 10 == 0:
         print("Evaluated {}/{} examples.".format(example_num + 1, len(self.eval_data)))
 
     summary_dict = {}
+    
     conll_results = conll.evaluate_conll(self.config["conll_eval_path"], coref_predictions, official_stdout)
     average_f1 = sum(results["f"] for results in conll_results.values()) / len(conll_results)
     summary_dict["Average F1 (conll)"] = average_f1

@@ -51,7 +51,7 @@ def output_conll(input_file, output_file, predictions):
       output_file.write(line)
       output_file.write("\n")
     else:
-      assert get_doc_key(row[0], row[1]) == doc_key
+      assert row[0] == doc_key
       coref_list = []
       if word_index in end_map:
         for cluster_id in end_map[word_index]:
@@ -68,11 +68,12 @@ def output_conll(input_file, output_file, predictions):
       else:
         row[-1] = "|".join(coref_list)
 
-      output_file.write("   ".join(row.encode("utf-8")))
+      output_file.write("   ".join(row))
       output_file.write("\n")
       word_index += 1
 
 def official_conll_eval(gold_path, predicted_path, metric, official_stdout=False):
+    
   cmd = ["conll-2012/scorer/v8.01/scorer.pl", metric, gold_path, predicted_path, "none"]
   process = subprocess.Popen(cmd, stdout=subprocess.PIPE)
   stdout, stderr = process.communicate()
@@ -96,5 +97,6 @@ def evaluate_conll(gold_path, predictions, official_stdout=False):
   with tempfile.NamedTemporaryFile(delete=False, mode="w") as prediction_file:
     with open(gold_path, "r") as gold_file:
       output_conll(gold_file, prediction_file, predictions)
+          
     print("Predicted conll file: {}".format(prediction_file.name))
   return { m: official_conll_eval(gold_file.name, prediction_file.name, m, official_stdout) for m in ("muc", "bcub", "ceafe") }

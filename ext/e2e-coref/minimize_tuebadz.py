@@ -202,7 +202,7 @@ def minimize_partition(name, language, labels, stats):
 if __name__ == "__main__":
   labels = collections.defaultdict(set)
   stats = collections.defaultdict(int)
-  minimize_partition("tuebadz-9.1-conll2011-small.txt", "english", labels, stats)
+  minimize_partition("data/tuebadz-9.1-conll2011-small.txt", "english", labels, stats)
   for k, v in labels.items():
     print("{} = [{}]".format(k, ", ".join("\"{}\"".format(label) for label in v)))
   for k, v in stats.items():
