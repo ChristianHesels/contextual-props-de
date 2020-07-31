@@ -183,7 +183,7 @@ def handle_line(line, document_state, language, labels, stats):
 
 def minimize_partition(name, language, labels, stats):
   input_path = name
-  output_path = "output.json"
+  output_path = "eval_data.json"
   count = 0
   print("Minimizing {}".format(input_path))
   with open(input_path, "r") as input_file:
@@ -202,7 +202,7 @@ def minimize_partition(name, language, labels, stats):
 if __name__ == "__main__":
   labels = collections.defaultdict(set)
   stats = collections.defaultdict(int)
-  minimize_partition("data/tuebadz-9.1-conll2011-small.txt", "english", labels, stats)
+  minimize_partition("data/eval_data.conll", "english", labels, stats)
   for k, v in labels.items():
     print("{} = [{}]".format(k, ", ".join("\"{}\"".format(label) for label in v)))
   for k, v in stats.items():

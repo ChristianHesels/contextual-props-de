@@ -76,7 +76,7 @@ class CorefModel(object):
     def _enqueue_loop():
       while True:
         random.shuffle(train_examples)
-        for example in train_examples:
+        for example in train_examples:     
           tensorized_example = self.tensorize_example(example, is_training=True)
           feed_dict = dict(zip(self.queue_input_tensors, tensorized_example))
           session.run(self.enqueue_op, feed_dict=feed_dict)
@@ -93,17 +93,17 @@ class CorefModel(object):
     session.run(tf.global_variables_initializer())
     saver.restore(session, checkpoint_path)
 
-  def load_lm_embeddings(self, doc_key, doc_length):
+  def load_lm_embeddings(self, doc_key):
     if self.lm_file is None:
       return np.zeros([0, 0, self.lm_size, self.lm_layers])
-    sentences = []
-    for i in range(doc_length):
-        sentences.append(self.lm_file[doc_key + "." + str(i + 1)])
-
-    lm_emb = np.zeros([doc_length, max(s.shape[0] for s in sentences), self.lm_size])
+    file_key = doc_key.replace("/", ":")
+    group = self.lm_file[file_key]
+    num_sentences = len(list(group.keys()))
+    sentences = [group[str(i)][...] for i in group]
+    sentences = [s.reshape(s.shape[1], s.shape[2], s.shape[0]) for s in sentences]
+    lm_emb = np.zeros([num_sentences, max(s.shape[0] for s in sentences), self.lm_size, self.lm_layers])
     for i, s in enumerate(sentences):
-      lm_emb[i, :s.shape[0], :] = s
-    lm_emb = lm_emb.reshape(lm_emb.shape[0], lm_emb.shape[1], lm_emb.shape[2], 1)
+      lm_emb[i, :s.shape[0], :, :] = s
     return lm_emb
 
   def tensorize_mentions(self, mentions):
@@ -160,8 +160,8 @@ class CorefModel(object):
     genre = 0
 
     gold_starts, gold_ends = self.tensorize_mentions(gold_mentions)
-    lm_emb = self.load_lm_embeddings(doc_key, len(tokens))
-
+    lm_emb = self.load_lm_embeddings(doc_key)
+    
     example_tensors = (tokens, context_word_emb, head_word_emb, lm_emb, char_index, text_len, speaker_ids, genre, is_training, gold_starts, gold_ends, cluster_ids)
 
     if is_training and len(sentences) > self.config["max_training_sentences"]:

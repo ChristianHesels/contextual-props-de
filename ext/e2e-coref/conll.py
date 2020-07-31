@@ -21,6 +21,7 @@ def get_doc_key(doc_id, part):
 def output_conll(input_file, output_file, predictions):
   prediction_map = {}
   for doc_key, clusters in predictions.items():
+    print(doc_key)
     start_map = collections.defaultdict(list)
     end_map = collections.defaultdict(list)
     word_map = collections.defaultdict(list)
@@ -43,15 +44,16 @@ def output_conll(input_file, output_file, predictions):
     if len(row) == 0:
       output_file.write("\n")
     elif row[0].startswith("#"):
-      begin_match = re.match(BEGIN_DOCUMENT_REGEX, line)
-      if begin_match:
-        doc_key = get_doc_key(begin_match.group(1), begin_match.group(2))
+      if line.startswith("#begin"):
+        doc_key = line[16:].replace("\n", "")
         start_map, end_map, word_map = prediction_map[doc_key]
         word_index = 0
       output_file.write(line)
       output_file.write("\n")
     else:
-      assert row[0] == doc_key
+      if row[0] != doc_key:
+        print(row, doc_key)
+        assert row[0] == doc_key
       coref_list = []
       if word_index in end_map:
         for cluster_id in end_map[word_index]:

@@ -23,8 +23,9 @@ if __name__ == "__main__":
   writer = tf.summary.FileWriter(log_dir, flush_secs=20)
 
   max_f1 = 0
-
-  with tf.Session() as session:
+  config = tf.ConfigProto()
+  config.gpu_options.allow_growth = True
+  with tf.Session(config=config) as session:
     session.run(tf.global_variables_initializer())
     model.start_enqueue_thread(session)
     accumulated_loss = 0.0
