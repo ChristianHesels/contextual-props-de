@@ -5,6 +5,8 @@ from __future__ import print_function
 import re
 import os
 import sys
+sys.path.insert(1, 'evaluate')
+from arcs_immediate_antecedents import evaluate
 import json
 import tempfile
 import subprocess
@@ -21,7 +23,6 @@ def get_doc_key(doc_id, part):
 def output_conll(input_file, output_file, predictions):
   prediction_map = {}
   for doc_key, clusters in predictions.items():
-    print(doc_key)
     start_map = collections.defaultdict(list)
     end_map = collections.defaultdict(list)
     word_map = collections.defaultdict(list)
@@ -49,7 +50,8 @@ def output_conll(input_file, output_file, predictions):
         start_map, end_map, word_map = prediction_map[doc_key]
         word_index = 0
       output_file.write(line)
-      output_file.write("\n")
+      if not line.startswith("#begin") and not line.startswith("#end"):    
+          output_file.write("\n")
     else:
       if row[0] != doc_key:
         print(row, doc_key)
@@ -90,6 +92,7 @@ def official_conll_eval(gold_path, predicted_path, metric, official_stdout=False
     print(stdout)
 
   coref_results_match = re.match(COREF_RESULTS_REGEX, stdout)
+
   recall = float(coref_results_match.group(1))
   precision = float(coref_results_match.group(2))
   f1 = float(coref_results_match.group(3))
@@ -102,3 +105,15 @@ def evaluate_conll(gold_path, predictions, official_stdout=False):
           
     print("Predicted conll file: {}".format(prediction_file.name))
   return { m: official_conll_eval(gold_file.name, prediction_file.name, m, official_stdout) for m in ("muc", "bcub", "ceafe") }
+
+def evaluate_conll_arcs(gold_path, predictions):
+  with tempfile.NamedTemporaryFile(delete=False, mode="w") as prediction_file:
+    with open(gold_path, "r") as gold_file:
+      output_conll(gold_file, prediction_file, predictions)
+          
+  print("Predicted conll file: {}".format(prediction_file.name))
+  return arcs_eval(gold_path, prediction_file.name)
+
+def arcs_eval(gold_path, predicted_path):
+    r, p, f1 = evaluate(gold_path, predicted_path)
+    return r, p, f1
