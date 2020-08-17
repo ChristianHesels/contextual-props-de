@@ -92,6 +92,7 @@ def official_conll_eval(gold_path, predicted_path, metric, official_stdout=False
     print(stdout)
 
   coref_results_match = re.match(COREF_RESULTS_REGEX, stdout)
+  print(coref_results_match)
 
   recall = float(coref_results_match.group(1))
   precision = float(coref_results_match.group(2))

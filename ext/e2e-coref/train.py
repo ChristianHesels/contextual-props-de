@@ -9,6 +9,7 @@ import time
 import tensorflow as tf
 import coref_model as cm
 import util
+import numpy as np
 
 if __name__ == "__main__":
   config = util.initialize_from_env()
@@ -27,6 +28,7 @@ if __name__ == "__main__":
   config.gpu_options.allow_growth = True
   with tf.Session(config=config) as session:
     session.run(tf.global_variables_initializer())
+    print(np.sum([np.prod(v.get_shape().as_list()) for v in tf.trainable_variables()]))
     model.start_enqueue_thread(session)
     accumulated_loss = 0.0
 
