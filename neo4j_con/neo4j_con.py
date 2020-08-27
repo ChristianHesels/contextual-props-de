@@ -97,7 +97,6 @@ def write_graphs_to_neo4j(graphs, username, password):
             
         # EDGE
         for (src, dst) in digraph.edges(graph):
-                
             label = str(graph.edge_label((src, dst)))
             
             if label:
@@ -109,7 +108,6 @@ def write_graphs_to_neo4j(graphs, username, password):
                     coref_id = int(re.findall(r'\d+', nodes[dst].coreference)[0])
                     create_edge(driver, src, coreference_heads.get(coref_id, dst), label) 
                 else:
-                    
                     create_edge(driver, src, dst, label)  
     driver.close()
                     

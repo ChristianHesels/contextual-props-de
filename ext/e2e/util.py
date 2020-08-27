@@ -26,7 +26,7 @@ def initialize_from_env():
   name = sys.argv[1]
   print("Running experiment: {}".format(name))
 
-  config = pyhocon.ConfigFactory.parse_file("experiments.conf")[name]
+  config = pyhocon.ConfigFactory.parse_file(os.path.dirname(os.path.realpath(__file__)) + "/experiments.conf")[name]
   config["log_dir"] = mkdirs(os.path.join(config["log_root"], name))
 
   print(pyhocon.HOCONConverter.convert(config, "hocon"))
