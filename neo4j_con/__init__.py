@@ -1,0 +1,1 @@
+from .neo4j_con import write_graphs_to_neo4j
