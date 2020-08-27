@@ -6,7 +6,7 @@ import re
 import os
 import sys
 sys.path.insert(1, 'evaluate')
-from arcs_immediate_antecedents import evaluate
+from arcs_inferred_antecedents import evaluate
 import json
 import tempfile
 import subprocess

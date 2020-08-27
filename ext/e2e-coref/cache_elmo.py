@@ -55,7 +55,7 @@ if __name__ == "__main__":
   config = tf.ConfigProto()
   config.gpu_options.allow_growth = True
   token_ph, len_ph, lm_emb = build_elmo()
-  with tf.Session() as session:
+  with tf.Session(config=config) as session:
     session.run(tf.global_variables_initializer())
     with h5py.File("elmo_cache.hdf5", "w") as out_file:
       for json_filename in sys.argv[1:]:

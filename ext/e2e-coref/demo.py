@@ -30,9 +30,11 @@ def print_predictions(example):
 def make_predictions(text, model):
   example = create_example(text)
   tensorized_example = model.tensorize_example(example, is_training=False)
+  print("TENSOR", tensorized_example)
   feed_dict = {i:t for i,t in zip(model.input_tensors, tensorized_example)}
+  print("FEED DICT", feed_dict)
   _, _, _, mention_starts, mention_ends, antecedents, antecedent_scores, head_scores = session.run(model.predictions + [model.head_scores], feed_dict=feed_dict)
-
+  print("Start", mention_starts, "End", mention_ends, "Ant", antecedents, "AntScore", antecedent_scores, "HeadScore", head_scores)
   predicted_antecedents = model.get_predicted_antecedents(antecedents, antecedent_scores)
 
   example["predicted_clusters"], _ = model.get_predicted_clusters(mention_starts, mention_ends, predicted_antecedents)
@@ -42,6 +44,7 @@ def make_predictions(text, model):
 
 if __name__ == "__main__":
   config = util.initialize_from_env()
+  print(create_example("This is a test."))
   model = cm.CorefModel(config)
   with tf.Session() as session:
     model.restore(session)
