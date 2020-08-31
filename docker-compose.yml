@@ -5,15 +5,15 @@ services:
     ports:
       - 5003:5003
   neo4j:
-    build: neo4j/.
+    build: neo4j_con/.
     ports:
       - 7687:7687
       - 7474:7474
     volumes:
-      - $HOME/neo4j/data:/data
-      - $HOME/neo4j/logs:/logs
-      - $HOME/neo4j/import:/var/lib/neo4j/import
-      - $HOME/neo4j/plugins:/plugins
+      - $HOME/neo4j_con/data:/data
+      - $HOME/neo4j_con/logs:/logs
+      - $HOME/neo4j_con/import:/var/lib/neo4j/import
+      - $HOME/neo4j_con/plugins:/plugins
     environment:
       - NEO4J_AUTH=none
       - NEO4J_dbms_security_procedures_unrestricted=algo.*,apoc.*
