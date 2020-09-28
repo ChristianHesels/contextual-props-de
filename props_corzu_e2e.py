@@ -28,7 +28,7 @@ import operator
 sys.path.append('ext/e2e')
 import coref_model as cm
 import util
-from neo4j_con import write_graphs_to_neo4j
+from neo4j_con import merge_graphs_and_write_to_neo4j
 if len(sys.argv) > 1:
     coref_parser = sys.argv[1]
 else: 
@@ -58,6 +58,8 @@ def parse_conll_with_props(file):
 if sys.version_info[0] >= 3:
     unicode = str
 
+
+
 def parse_dependencies_to_conll_file(text, path):
     params = {
         "text": text,
@@ -78,7 +80,16 @@ def parse_dependencies_to_conll_file(text, path):
         return 1
     
 
-
+def umlaut(word):
+    tempVar = word.lower()
+    tempVar = tempVar.replace('ä', 'ae')
+    tempVar = tempVar.replace('ö', 'oe')
+    tempVar = tempVar.replace('ü', 'ue')
+    tempVar = tempVar.replace('Ä', 'Ae')
+    tempVar = tempVar.replace('Ö', 'Oe')
+    tempVar = tempVar.replace('Ü', 'Ue')
+    tempVar = tempVar.replace('ß', 'ss')
+    return tempVar
 
 def create_example(text):
   raw_sentences = sent_tokenize(text)
@@ -180,7 +191,7 @@ if coref_parser == "corzu":
         print("Using Props DE to parse Output")
         gs = parse_conll_with_props(output)
         print("Write results to neo4j")
-        write_graphs_to_neo4j(gs, "neo4j", "852963")
+        merge_graphs_and_write_to_neo4j(gs, "neo4j", "852963")
 
 elif coref_parser == "e2e":
     print("Using", coref_parser + ".")
@@ -195,6 +206,7 @@ elif coref_parser == "e2e":
             err = parse_dependencies_to_conll_file(text, conll)
             print("Error:", err)
             if err == 0:
+                text = umlaut(text)	
                 example = create_example(text)
                 predictions = make_predictions(text, model)
                 with open(output, "w") as output_file:
@@ -203,6 +215,6 @@ elif coref_parser == "e2e":
                     print("Using Props DE to parse Output")
                 gs = parse_conll_with_props(output)
                 print("Write results to neo4j")
-                write_graphs_to_neo4j(gs, "neo4j", "852963")                   
+                merge_graphs_and_write_to_neo4j(gs, "neo4j", "852963")                   
 else:
     print("Choose a parser (either corzu or e2e)")
