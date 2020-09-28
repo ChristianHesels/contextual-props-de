@@ -31,23 +31,30 @@ def delete_all(driver):
         session.write_transaction(_delete_all)
 
         
-def _add_coreference_heads_for_graph(graph, coreference_heads):
-    for u_v in graph.edges():
-        no_coreference = False
-        for edge in u_v:
-            if not edge.coreference:
-                no_coreference = True
-            elif no_coreference:
-                if edge.coreference:
-                    coref_id = int(re.findall(r'\d+', edge.coreference)[0])
-                    if coref_id not in coreference_heads:
-                        coreference_heads[coref_id] = edge.uid
-                    elif edge.uid < coreference_heads[coref_id]:
-                        coreference_heads[coref_id] = edge.uid
-    return coreference_heads
-    
 
-def _is_part_of_initial_coreference(nodes, uid):
+
+def _is_head_node(node):
+    if node.pos() == "NN"or node.pos() == "NE":
+        return True
+    else:
+        return False
+
+def _add_coreference_heads_for_graph(graph, coreference_heads):
+    coreference_nodes = []
+    coref_ids = []
+
+    for node in graph:
+        if node.coreference:
+            coreference_nodes.append(node)
+    for node in coreference_nodes:
+        coref_id = int(re.findall(r'\d+', node.coreference)[0])
+        
+        if coref_id not in coref_ids:
+            if _is_head_node(node):
+                coref_ids.append(coref_id)
+                coreference_heads[coref_id] = node.uid
+                
+def _is_part_of_initial_coreference(nodes, uid, coreference_map):
     current_node = nodes[uid]
     if current_node.coreference:
         coref_id = int(re.findall(r'\d+', current_node.coreference)[0])
@@ -67,38 +74,32 @@ def _is_part_of_initial_coreference(nodes, uid):
             else:
                 return False
 
-def write_graphs_to_neo4j(graphs, username, password):
+def merge_graphs_and_write_to_neo4j(graphs, username, password):
     uri = "bolt://localhost:7687"
     driver = GraphDatabase.driver(uri, auth=(username, password))
     delete_all(driver)
     coreference_heads = {}
     added_coreference_nodes = []
+    coreference_map = defaultdict(list)
+    id_count = 0
     for graph, tree in graphs:
         nodes = graph.nodesMap
         _add_coreference_heads_for_graph(graph, coreference_heads)
+
         for uid in nodes:
             node = nodes[uid]
             # NODE
             label = str(node.text[0])
-            if node.isPredicate:
-                # is predicate
-                pass
-            if node.features.get("top", False):
-                # is top
-                pass
             
-            # Remove Punctuation Marks
-            if len(label) > 0:
-                if node.coreference and _is_part_of_initial_coreference(nodes, uid):
-                    create_node(driver, uid, label, node.coreference)   
-                    added_coreference_nodes.append(uid)
-                elif not node.coreference:
-                    create_node(driver, uid, label, node.coreference)
+            if node.coreference and _is_part_of_initial_coreference(nodes, uid, coreference_map):
+                create_node(driver, uid, label, node.coreference)   
+                added_coreference_nodes.append(uid)
+            elif not node.coreference:
+                create_node(driver, uid, label, node.coreference)
             
         # EDGE
         for (src, dst) in digraph.edges(graph):
             label = str(graph.edge_label((src, dst)))
-            
             if label:
                 coref_id = None
                 if nodes[src].coreference and dst not in added_coreference_nodes:
@@ -108,6 +109,4 @@ def write_graphs_to_neo4j(graphs, username, password):
                     coref_id = int(re.findall(r'\d+', nodes[dst].coreference)[0])
                     create_edge(driver, src, coreference_heads.get(coref_id, dst), label) 
                 else:
-                    create_edge(driver, src, dst, label)  
-    driver.close()
-                    
+                    create_edge(driver, src, dst, label)

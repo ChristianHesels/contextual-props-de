@@ -1,1 +1,1 @@
-from .neo4j_con import write_graphs_to_neo4j
+from .neo4j_con import merge_graphs_and_write_to_neo4j
