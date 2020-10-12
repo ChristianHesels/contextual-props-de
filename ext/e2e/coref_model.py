@@ -26,6 +26,7 @@ class CorefModel(object):
     self.char_embedding_size = config["char_embedding_size"]
     self.char_dict = util.load_char_dict(config["char_vocab_path"])
     self.max_span_width = config["max_span_width"]
+    self.calc_elmo = config["calc_elmo"]
     self.genres = { g:i for i,g in enumerate(config["genres"]) }
     if config["lm_path"]:
       self.lm_file = h5py.File(self.config["lm_path"], "r")
@@ -94,7 +95,14 @@ class CorefModel(object):
     saver.restore(session, checkpoint_path)
 
   def load_lm_embeddings(self, doc_key):
-    if self.lm_file is None:
+    if self.calc_elmo:
+      _tmp_lm = h5py.File("ext/e2e/data/elmo_embeddings.hdf5", "r")
+      np_array = _tmp_lm.get('0').value
+      np_array = np_array.reshape(np_array.shape[1], np_array.shape[2], np_array.shape[0])
+      _tmp= np.zeros([1, np_array.shape[1], self.lm_size, self.lm_layers])
+      _tmp[0, :np_array.shape[0], :, :] = np_array
+      return _tmp
+    elif self.lm_file is None:
       return np.zeros([0, 0, self.lm_size, self.lm_layers])
     file_key = doc_key.replace("/", ":")
     group = self.lm_file[file_key]
@@ -156,7 +164,7 @@ class CorefModel(object):
 
     doc_key = example["doc_key"].replace("\n", "")
 
-
+    print(doc_key)
     genre = 0
 
     gold_starts, gold_ends = self.tensorize_mentions(gold_mentions)
