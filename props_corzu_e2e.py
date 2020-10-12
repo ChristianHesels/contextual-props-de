@@ -47,11 +47,19 @@ def parse_conll_with_props(file):
     i = 0
     for graph in graphs:  
         g = convert(graph)
+        print("\n")
+        print("------------------------------")
+        print("-------PropsDE Results-------:")
+        print("------------------------------")
+        for props in g.getPropositions('pdf'):
+            print(props)
+            print("\n")
         ret.append((g,g.tree_str))
         i += 1
 
     if not graphs:#Berkley bug?
         ret.append((GraphWrapper("",""),""))
+
         
     return ret
 
@@ -116,6 +124,8 @@ def print_predictions(example):
   words = util.flatten(example["sentences"])
   for cluster in example["predicted_clusters"]:
     print(u"Predicted cluster: {}".format([" ".join(words[m[0]:m[1]+1]) for m in cluster]))
+    
+
     
     
 def output_conll(input_file, output_file, predictions):
@@ -189,7 +199,17 @@ if coref_parser == "corzu":
         err = os.system(cmd)
         print("Error:", err)
         print("Using Props DE to parse Output")
+
         gs = parse_conll_with_props(output)
+        
+        print("\n")
+        print("------------------------------")
+        print("--------CorZu Results--------:")
+        print("------------------------------")
+        with open(output, "r") as output_file:
+            for line in output_file.readlines():
+                print(line.rstrip('\n'))
+        print("\n")
         print("Write results to neo4j")
         merge_graphs_and_write_to_neo4j(gs, "neo4j", "852963")
 
@@ -209,12 +229,21 @@ elif coref_parser == "e2e":
                 text = umlaut(text)	
                 example = create_example(text)
                 predictions = make_predictions(text, model)
+                
                 with open(output, "w") as output_file:
                     with open(conll, "r") as input_file:
                         output_conll(input_file, output_file, predictions)
                     print("Using Props DE to parse Output")
                 gs = parse_conll_with_props(output)
+                print("\n")
+                print("------------------------------")
+                print("------E2E-German Results-----:")
+                print("------------------------------")
+                with open(output, "r") as output_file:
+                    for line in output_file.readlines():
+                        print(line.rstrip('\n'))
+                print("\n")
                 print("Write results to neo4j")
                 merge_graphs_and_write_to_neo4j(gs, "neo4j", "852963")                   
 else:
-    print("Choose a parser (either corzu or e2e)")
+    print("Choose a parser (either corzu, e2e)")
