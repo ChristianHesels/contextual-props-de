@@ -95,14 +95,7 @@ class CorefModel(object):
     saver.restore(session, checkpoint_path)
 
   def load_lm_embeddings(self, doc_key):
-    if self.calc_elmo:
-      _tmp_lm = h5py.File("ext/e2e/data/elmo_embeddings.hdf5", "r")
-      np_array = _tmp_lm.get('0').value
-      np_array = np_array.reshape(np_array.shape[1], np_array.shape[2], np_array.shape[0])
-      _tmp= np.zeros([1, np_array.shape[1], self.lm_size, self.lm_layers])
-      _tmp[0, :np_array.shape[0], :, :] = np_array
-      return _tmp
-    elif self.lm_file is None:
+    if self.lm_file is None:
       return np.zeros([0, 0, self.lm_size, self.lm_layers])
     file_key = doc_key.replace("/", ":")
     group = self.lm_file[file_key]
@@ -164,7 +157,6 @@ class CorefModel(object):
 
     doc_key = example["doc_key"].replace("\n", "")
 
-    print(doc_key)
     genre = 0
 
     gold_starts, gold_ends = self.tensorize_mentions(gold_mentions)
