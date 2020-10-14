@@ -6,10 +6,10 @@ import re,sys,pdb
 
 """settings"""
 def evaluate(gold_path, predicted_path):
-    #noun_pos_tags=['NN','NE']                                               #German tag set
-    #pronoun_pos_tags=['PPER','PPOSAT','PRELS']                              #German tag set
-    noun_pos_tags=['NN','NNS','NNP','NNPS']                                 #English tag set
-    pronoun_pos_tags=['PRP','PRP$']                                         #English
+    noun_pos_tags=['NN','NE']                                               #German tag set
+    pronoun_pos_tags=['PPER','PPOSAT','PRELS']                              #German tag set
+    #noun_pos_tags=['NN','NNS','NNP','NNPS']                                 #English tag set
+    #pronoun_pos_tags=['PRP','PRP$']                                         #English
     pos_index=4                                                             #list index of the POS tag in the split key/response file
     lexem_index=3                                                           #list index of the lexem/lemma in the split key/response file
     
