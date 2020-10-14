@@ -104,7 +104,7 @@ def create_example(text):
   sentences = [word_tokenize(s) for s in raw_sentences]
   speakers = [["" for _ in sentence] for sentence in sentences]
   return {
-    "doc_key": 0,
+    "doc_key": "0",
     "clusters": [],
     "sentences": sentences,
     "speakers": speakers,
