@@ -30,9 +30,6 @@ def delete_all(driver):
     with driver.session() as session:
         session.write_transaction(_delete_all)
 
-        
-
-
 def _is_head_node(node):
     if node.pos() == "NN"or node.pos() == "NE":
         return True
