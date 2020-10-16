@@ -16,14 +16,11 @@ def loadParser():
     global parser
     parser = ParserDE(True)
 
-def parseSentences(sentences):
+def parseSentences(output_file):
     global parser
 
     if not parser:
         parser = ParserDE(False)
-
-    # call the dependency parser
-    output_file = parser.parse(sentences)
 
     # read and process output
     graphs = read_dep_graphs(None, output_file)
@@ -37,6 +34,5 @@ def parseSentences(sentences):
 
     if not graphs:#Berkley bug?
         ret.append((GraphWrapper("",""),""))
-        
+    print(ret)
     return ret
- 

@@ -127,7 +127,7 @@ class GraphWrapper(digraph):
 
     def get_components(self):
         graph_components = accessibility(self)
-        return {self.nodesMap[key.uid]:[self.nodesMap[v.uid] for v in value] for key, value in graph_components.iteritems() }
+        return {self.nodesMap[key.uid]:[self.nodesMap[v.uid] for v in value] for key, value in graph_components.items() }
 
     def add_node(self, node):
         """
@@ -300,7 +300,7 @@ class GraphWrapper(digraph):
         dot = pygraph.readwrite.dot.pydot.Dot()
         
         if writeLabel:
-            label = "\n".join([self.originalSentence.encode('utf-8')])
+            label = "\n".join([str(self.originalSentence.encode('utf-8'))])
             dot.set_label(label)
             dot.set_labelloc("bottom")
             dot.set_labeljust("center")
@@ -310,8 +310,9 @@ class GraphWrapper(digraph):
             dotNode = pygraph.readwrite.dot.pydot.Node()
             dotNode.set_shape(curNode.nodeShape)
             dotNode.set_name(unicode(uid))
-            label = encode_german_chars(u"<{0}>".format(curNode))
-            dotNode.set_label(label.encode('ascii', errors='ignore'))
+            label = str(encode_german_chars(u"<{0}>".format(curNode.text[0])))
+
+            dotNode.set_label(label)
             if curNode.isPredicate:
                 dotNode.set_color(PREDICATE_COLOR)
                 dotNode.set_fontcolor(PREDICATE_COLOR)
@@ -320,22 +321,22 @@ class GraphWrapper(digraph):
                 dotNode.set_fontcolor(TOPNODE_COLOR)
                 
             ##### for debug #####
-            if curNode.features.has_key("Nominal"):
+            if "Nominal" in curNode.features:
                dotNode.set_color("blue")
                dotNode.set_fontcolor("blue")
-            if curNode.features.has_key("VADAS"):
+            if "VADAS" in curNode.features:
                dotNode.set_color("green")
                dotNode.set_fontcolor("green")
-            if curNode.features.has_key("traces"):
+            if "traces" in curNode.features:
                dotNode.set_color("orange")
                dotNode.set_fontcolor("orange")
-            if curNode.features.has_key("LV"):
+            if "LV" in curNode.features:
                dotNode.set_color("purple")
                dotNode.set_fontcolor("purple")
-            if curNode.features.has_key("heuristics"):
+            if "heuristics" in curNode.features:
                dotNode.set_color("teal")
                dotNode.set_fontcolor("teal")
-            if curNode.features.has_key("debug"):
+            if "debug" in curNode.features:
                 dotNode.set_color("blue")
                 dotNode.set_fontcolor("blue")
 
@@ -344,7 +345,7 @@ class GraphWrapper(digraph):
         for (src, dst) in digraph.edges(self):
             curEdge = pygraph.readwrite.dot.pydot.Edge(src=src, dst=dst)
             curEdge.set_fontsize("11")
-            label = self.edge_label((src, dst)).encode('utf-8')
+            label = str(self.edge_label((src, dst)))
             if label:
                 if self.is_aux_edge((src, dst)):
                     curEdge.set_style("dashed")
@@ -410,7 +411,7 @@ class GraphWrapper(digraph):
         It saves the dot and png file in temporary files in pwd.
         """
         dumpGraphsToTexFile(graphs=[self], appendix={}, graphsPerFile=1, lib=self.HOME_DIR, outputType="html")
-        call('"C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" ' + self.HOME_DIR + 'autogen0.html')
+        #call('"C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe" ' + self.HOME_DIR + 'autogen0.html')
         
         
         

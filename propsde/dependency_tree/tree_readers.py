@@ -19,7 +19,6 @@ from propsde.utils.utils import encode_german_characters
 # 10/11: dep relation
 TIGER_FILE = ''
 
-
 def get_conll_from_tiger_file(sent_ids):
     target_ids = set(sent_ids)
     current_id = -1
@@ -49,7 +48,8 @@ def get_conll_from_parser_file(file_parsed):
     for line in codecs.open(file_parsed, encoding='utf-8'):
         cols = line.strip().split('\t')
         if len(cols) == 10:
-            cols = cols[0:6] + ['_','_'] + cols[6:7] + ['_'] + cols[7:8]
+            cols = cols[0:6] + ['_','_'] + cols[6:7] + ['_'] + cols[7:8] + [cols[-1]]
+            
             sent.append(cols)
         else:
             if len(sent) > 0:
@@ -74,31 +74,68 @@ def add_morph_features(file_parsed, sentences):
                 token[7] = morph[i][token[0]]
     return sentences
 
-def create_dep_graphs_from_conll(sentences_conll):
+def find_np(lines, id):
+    np = ""
+    indices = 0
+    for line in lines:
+        line_list = re.split('\t| +',line)
+        np += line_list[1] + " "
+        indices += 1
+        if line.strip().endswith(id + ')'):
+            return np, indices
+        
+def check_for_coreference(cols):
+    if "(" in cols[-1] or ")" in cols[-1]:
+        return cols[-1]
+    return None
 
+def is_last_word_of_coreference(cols):
+    if ")" in cols[-1]:
+        return cols[-1]
+    return None
+
+def get_uids_from_coreference(coreference_map, sentences_conll, index):
+    i = 0
+    coref_id = int(re.findall(r'\d+', sentences_conll[index + i][-1])[0])
+    while(str(coref_id) + ")" not in sentences_conll[index + i][-1]):
+        if i == 0:
+            coreference_map[int(sentences_conll[index + i][0])] = sentences_conll[index + i][-1]
+        else:
+            coreference_map[int(sentences_conll[index + i][0])] = str(coref_id)
+        i += 1
+    coreference_map[int(sentences_conll[index + i][0])] = sentences_conll[index + i][-1]
+
+def create_dep_graphs_from_conll(sentences_conll):
     graphs = []
+    
+    coreference_node = None
     
     for sentence_conll in sentences_conll:
         curGraph = GraphWrapper("","")
         nodesMap = {}
-        
+        coreference_map = {}
         # nodes
-        for cols in sentence_conll:
+        for i, cols in enumerate(sentence_conll):
             if cols[8] != '_':
                 id = int(cols[0])
                 word_form = cols[1]
+                coreference = check_for_coreference(cols)
+                if coreference:
+                    get_uids_from_coreference(coreference_map, sentence_conll, i)
                 if not id in nodesMap:
                     nodesMap[id] = Node(text=[Word(index=id,word=word_form)],
-                                     isPredicate=False,
-                                     features={},
-                                     gr=curGraph,
-                                     orderText=True)
+                                        isPredicate=False,
+                                        coreference=coreference_map.get(id, None),
+                                        features={},
+                                        gr=curGraph,
+                                        orderText=True) 
+
         nodesMap[0] = Node(text=[Word(index=0,word='ROOT')],
                              isPredicate=False,
+                             coreference = coreference,
                              features={},
                              gr=curGraph,
                              orderText=True)
-        
         # edges
         for cols in sentence_conll:
             if cols[8] != '_':
@@ -111,7 +148,6 @@ def create_dep_graphs_from_conll(sentences_conll):
                     curGraph.add_edge(edge=(headNode,depNode), label=rel)
 
         graphs.append((curGraph,nodesMap))
-        
     return graphs
 
 
@@ -178,7 +214,6 @@ def read_dep_graphs(sent_ids,file_parsed):
     
     graphs = []
     for i,t in enumerate(trees):
-        
         curGraph,nodesMap = graphsFromFile[i]
         curGraph.set_original_sentence(t[0].original_sentence)
         curGraph.tree_str = u"\n".join(t[0].to_original_format().split("\n")[1:])
