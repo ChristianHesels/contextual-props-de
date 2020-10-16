@@ -20,8 +20,7 @@ class ParserDE(object):
         self.model_path_lem = 'ext/mate-model/lemma-ger.model'
         self.model_path_parse = 'ext/mate-model/parser-ger.model'
         if not os.path.exists(self.model_path_lem) or not os.path.exists(self.model_path_lem):
-            print('mate-tools model not found!')
-            exit()
+            print('mate-tools model not found! (Can be ignored, when ParZu is used)')
         self.setup()
         
     # load models if using jpype 
