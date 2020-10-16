@@ -1,96 +1,66 @@
 
-# PropsDE
+# Contextual PropsDE
 
-What is PropsDE?
+What is Contextual PropsDE?
 ------------
-PropsDE is an adaption of the original PropS system to the German language. 
-It can be used to transform German sentences into proposition structures and to extract Open IE tuples from them.
+Contextual PropsDE is an extension to PropsDE. 
+Instead of creating relations of each sentence, it uses E2E-German or CorZu for Coreference-Resolution and maps the coreferences to the antities to create a knowledge graph. This knowledge graph is saved to a Neo4j Graph database, where it can be used for information retrieval.
+
+[PropsDE](https://github.com/UKPLab/props-de)
 
 [original English version](https://github.com/gabrielStanovsky/props) 
 
 [online demo for English and German](http:/www.cs.biu.ac.il/~stanovg/props.html)  
 
-The portation from English to German is described in the following paper. Please cite it in case you use the software in your work:
+Contact person: Christian Hesels, s0553310@htw-berlin.de
 
-```
-@InProceedings{TUD-CS-2016-0181,
-  author    = {Tobias Falke and Gabriel Stanovsky and Iryna Gurevych and Ido Dagan},
-  title     = {Porting an Open Information Extraction System from English to German},
-  booktitle = {Proceedings of the 2016 Conference on Empirical Methods in Natural Language
-Processing (EMNLP)},
-  month     = {November},
-  year      = {2016},
-  address   = {Austin, Texas},
-  publisher = {Association for Computational Linguistics},
-  pages     = {892--898},
-  url       = {https://aclweb.org/anthology/D16-1086}
-}
-```
-
-Contact person: Tobias Falke, lastname(at)aiphes.tu-darmstadt.de
-
-http://www.aiphes.tu-darmstadt.de/
 
 > This repository contains experimental software and is published for the sole purpose of giving additional background details on the respective publication. 
-
-What is PropS?
-------------
-PropS offers an output representation designed to explicitly and uniformly express much of the proposition structure which is implied from syntax.
-
-Semantic NLP applications often rely on dependency trees to recognize major elements of the proposition structure of sentences. 
-Yet, while much semantic structure is indeed expressed by syntax, many phenomena are not easily read out of dependency trees, often leading to further ad-hoc heuristic post-processing or to information loss. 
-For that end, PropS post-processes dependency trees to present a compelling representation for downstream tasks.
 
 
 Prerequisites
 -------------
 
-* python >= 2.7 (tested with 2.7.6)
+* python >= 3 (tested with 3.6.9)
 * java >= 7 (JAVA_HOME has to be set)
+* pip3 >= 9
+* docker >= 19
 
 Installation
 ------------
 
 1. Clone this repository and navigate into the root folder.
 
-        git clone https://github.com/ChristianHesels/props-de.git
-		cd props-de
+        git clone https://github.com/ChristianHesels/contextual-props-de.git
+		cd contextual-props-de
 
-2. Install required python packages.
+2. Run the setup Script to install all dependencies and python requirements.
 
-		pip3 install -r requirements.txt
+		./setup.sh
 		
-3. In case you don't already have it, download NLTK's tokenization model.
+3. Download the GloVe Word Embeddings and copy them into ext/e2e/data (2.5 GB) (Only for E2E-German).
 
-		python3 -c "import nltk; nltk.download('punkt')"
+		https://drive.google.com/file/d/1nN_qc3qHtPecxek0LsYf544ipJpfXEfj/view?usp=sharing
+	
 		
-4. Download java dependencies (Mate-Tools with models and JoBimText (173M)).
+4. Download the trained E2E-German model (650 MB) and copy it to ext/e2e/logs with the name props (Only for E2E-German).
 
-		cd ext
-		./load_java_dependencies.sh
-		
-5. Download the [Mate-Tools parsing model](https://docs.google.com/uc?export=download&id=0B-qbj-8rtoUMLUg5NGpBVW9JNkE) (350M) manually and save it as `ext/mate-model/parser-ger.model`. (The script in (4) can't get around the large file warning in Google Drive)
-		
-6. (Optional) To produce graphical output with the parsing script, [graphviz](http://www.graphviz.org/) has to be installed and callable from command line.
-
-7. (Optional) To produce graphical output in the web demo, you need a copy of [brat](http://brat.nlplab.org/) and point to it in the server script.
+		https://drive.google.com/file/d/1L-kKxzlC0pPr_tJzRyi9xoTOKSPQXfNb/view?usp=sharing
 
 
 
 Running
 -------------
 
-Two scripts are available in the root folder to use PropsDE:
+First start the Dependency Parser ParZu and the Neo4j Database with Docker:
 
-- *parse_props.py*
+- *docker-compose build* (first time)
+- *docker-compose up* (first time)
 
-    Can be called to parse sentences in a file. The file must have one sentence per line. Example:
-	
-		python parse_props.py -t --props --oie example.txt
-		
-	Use -h to see all options. Graphical representations are produced as SVG files in the same directory as the input file.
+Then start the python3 script with the coreference-resolution system you want to use (corzu or e2e):
 
-- *parse_server.py*
+- *props_corzu_e2e.py corzu*
+- *props_corzu_e2e.py e2e*
 
-	Can be called to start a bottle webserver serving a small demo web page. This also shows how to call the dependency parser via JPype, requiring the model to be loaded only once when starting the server.
+E2E-German takes a longer time to load and needs at least 16 GB of RAM, because of the large word embeddings. The props_corzu_e2e.py Script is used for test purposes only, because E2E-German needs Elmo-Embeddings for it's full potential. Elmo can be trained with *https://github.com/ChristianHesels/bilm-tf* and used with the seperate implementation of E2E-German *https://github.com/ChristianHesels/e2e-german*.
 
