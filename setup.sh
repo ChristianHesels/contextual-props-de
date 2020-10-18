@@ -16,7 +16,7 @@ fi
 python3 -c "import nltk; nltk.download('punkt')"
 mkdir -p ext/e2e/data
 mkdir -p ext/e2e/logs
-
+mkdir -p ext/e2e/logs/props
 echo "Download stuff"
 
 fileid="1DuxqfFluLo_eMqY6PHZPJ2ePngz8C90y"
@@ -25,9 +25,15 @@ curl -c ./cookie -s -L "https://drive.google.com/uc?export=download&id=${fileid}
 curl -Lb ./cookie "https://drive.google.com/uc?export=download&confirm=`awk '/download/ {print $NF}' ./cookie`&id=${fileid}" -o ${filename}
 rm cookie
 mv char_vocab.txt ext/e2e/data/char_vocab.txt
-
+pip3 install -r requirements.txt
 cd ext
 ./load_java_dependencies.sh
-echo "Download embeddings to data, char_vocab.txt and model to logs"
-echo "Download Mate-Tools Model https://docs.google.com/uc?export=download&id=0B-qbj-8rtoUMLUg5NGpBVW9JNkE and place it into ext/mate-model/parser-ger.model" 
-echo "Go to folder ext/e2e and run setup_all.sh, edit script for macOS"
+cd e2e
+pip3 install -r requirements.txt
+echo "Download E2E-German Model:"
+echo "https://drive.google.com/file/d/1L-kKxzlC0pPr_tJzRyi9xoTOKSPQXfNb/view?usp=sharing"
+echo "Extract and move 'final' content to ext/e2e/logs/props"
+echo "--------------------------------"
+echo "Download GloVe Word Embeddings:"
+echo "https://drive.google.com/file/d/1nN_qc3qHtPecxek0LsYf544ipJpfXEfj/view?usp=sharing"
+echo "Extract and move to ext/e2e/data"
