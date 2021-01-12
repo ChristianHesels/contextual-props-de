@@ -46,7 +46,10 @@ Installation
 4. Download the trained E2E-German model (650 MB) and copy it to ext/e2e/logs with the name props (Only for E2E-German).
 
 		https://drive.google.com/file/d/1L-kKxzlC0pPr_tJzRyi9xoTOKSPQXfNb/view?usp=sharing
+		
+5. Go to ext/e2e and open setup_all.sh in an editor. Uncomment your operating system and run ./setup_all.sh afterwards.
 
+        ./setup_all.sh
 
 
 Running
@@ -59,8 +62,8 @@ First start the Dependency Parser ParZu and the Neo4j Database with Docker:
 
 Then start the python3 script with the coreference-resolution system you want to use (corzu or e2e):
 
-- *props_corzu_e2e.py corzu*
-- *props_corzu_e2e.py e2e*
+- *python3 props_corzu_e2e.py corzu*
+- *python3 props_corzu_e2e.py e2e*
 
 E2E-German takes a longer time to load and needs at least 16 GB of RAM, because of the large word embeddings. The props_corzu_e2e.py Script is used for test purposes only, because E2E-German needs Elmo-Embeddings for it's full potential. Elmo can be trained with *https://github.com/ChristianHesels/bilm-tf* and used with the seperate implementation of E2E-German *https://github.com/ChristianHesels/e2e-german*.
 
