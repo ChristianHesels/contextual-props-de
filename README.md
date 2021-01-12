@@ -4,7 +4,7 @@
 What is Contextual PropsDE?
 ------------
 Contextual PropsDE is an extension to PropsDE. 
-Instead of creating relations of each sentence, it uses E2E-German or CorZu for Coreference-Resolution and maps the coreferences to the antities to create a knowledge graph. This knowledge graph is saved to a Neo4j Graph database, where it can be used for information retrieval.
+Instead of creating relations of each sentence, it uses E2E-German or CorZu for Coreference-Resolution and maps the coreferences to the entities to create a knowledge graph. This knowledge graph is saved to a Neo4j Graph database, where it can be used for information retrieval.
 
 [PropsDE](https://github.com/UKPLab/props-de)
 
