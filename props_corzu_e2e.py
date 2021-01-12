@@ -1,7 +1,6 @@
 import os, sys, codecs, time, datetime
 import fileinput
 import os.path
-import stanza
 from io import StringIO
 from subprocess import call
 import urllib.request
